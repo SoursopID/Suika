@@ -36,6 +36,7 @@ export class Ctx {
   stanzaId?: (string | null);
   participant?: (string | null);
   expiration: number = 0;
+  mentions?: (string[] | null);
 
   constructor(hand: Handler, sock: WASocket, u: WAMessage) {
     this.hand = hand;
@@ -70,6 +71,7 @@ export class Ctx {
     this.stanzaId = this.contextInfo?.stanzaId;
     this.participant = this.contextInfo?.participant;
     this.expiration = this.contextInfo?.expiration ?? 0;
+    this.mentions = this.contextInfo?.mentionedJid ?? [];
 
 
   }
