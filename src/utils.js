@@ -9,12 +9,11 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
-
-handler.add({
-  cmds: ["ping", "p"],
-  check: (m) => { return m.fromMe },
-  exec: (m) => {
-    m.reply({ text: "Pong!" });
+export function genHEXID(len) {
+  const hex = '0123456789abcdef';
+  let res = '';
+  for (let i = 0; i < len; i++) {
+    res += hex[Math.floor(Math.random() * hex.length)];
   }
-})
+  return res.toUpperCase();
+}

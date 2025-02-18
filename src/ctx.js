@@ -1,3 +1,14 @@
+/**
+ * Copyright (C) 2025 SoursopID
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/
+ *
+ * This code is part of Suika project
+ * (https://github.com/SoursopID/Suika)
+ */
+
 function extactTextContext(m) {
   let resp = {
     text: "",
@@ -26,7 +37,8 @@ function extactTextContext(m) {
 }
 
 export class Ctx {
-  constructor(sock, event) {
+  constructor(hand, sock, event) {
+    this.hand = hand;
     this.sock = sock;
     this.update = event;
     this.key = this.update.key;

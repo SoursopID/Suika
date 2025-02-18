@@ -1,6 +1,21 @@
+/**
+ * Copyright (C) 2025 SoursopID
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/
+ *
+ * This code is part of Suika project
+ * (https://github.com/SoursopID/Suika)
+ */
+
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { handler } from "./hand.js";
 import { loadPlugins } from "./loader.js";
+import { addCopyrightRecursive } from "./copyright.js";
+
+addCopyrightRecursive('src');
+addCopyrightRecursive('plugins');
 
 
 async function connectClient() {
@@ -9,7 +24,7 @@ async function connectClient() {
   const sock = makeWASocket({
     printQRInTerminal: true,
     auth: state,
-    browser: ['Admin', 'Chrome', '1.0.0']
+    browser: ['macOS', 'Chrome', '10.15.6'],
   });
 
   sock.ev.on('connection.update', async (update) => {
@@ -21,18 +36,11 @@ async function connectClient() {
         connectClient();
       }
     }
-
   });
 
   sock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('messages.upsert', async ({ messages }) => {
-    if (messages.length === 0) return;
-
-    const msg = messages[0];
-    handler.handle(sock, msg);
-
-  });
+  handler.attach(sock);
 
   return sock;
 }

@@ -1,18 +1,41 @@
+/**
+ * Copyright (C) 2025 SoursopID
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/
+ *
+ * This code is part of Suika project
+ * (https://github.com/SoursopID/Suika)
+ */
+
 import { Ctx } from "./ctx.js";
+import { genHEXID } from "./utils.js";
 
 export const DEFAULT_PREFIX = "/.";
 
-export function genHEXID(len) {
-  return Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase();
-}
 
 export class Handler {
   constructor() {
+    this.sock = null;
+    this.handlers = new Map();
+
     this.listeners = new Map();
     this.plugins = new Map();
     this.pluginWithPrefix = new Map();
 
-    this.connection_update
+  }
+
+  countListeners() {
+    return this.listeners.size;
+  }
+
+  countPlugins() {
+    return this.plugins.size;
+  }
+
+  countPluginWithPrefix() {
+    return this.pluginWithPrefix.size;
   }
 
   add(p) {
@@ -34,48 +57,19 @@ export class Handler {
     }
   }
 
-  handle(sock, msg) {
-    try {
-      const ctx = new Ctx(sock, msg);
-      // looping through listeners
-      for (const [id, listener] of this.listeners) {
-        if (listener.check(ctx)) {
-          try {
-            listener.exec(ctx);
-          } catch (error) {
-            console.error(`Error executing listener ${id}:`, error);
-          }
-        }
-      }
+  add_handler(e, h) {
+    this.handlers.set(e, h);
+  }
 
-      // looping through plugins with prefix
-      if (this.pluginWithPrefix.has(ctx.pattern)) {
-        const id = this.pluginWithPrefix.get(ctx.pattern);
-        const plugin = this.plugins.get(id);
-        if (plugin.check(ctx)) {
-          try {
-            plugin.exec(ctx);
-          } catch (error) {
-            console.error(`Error executing plugin ${id}:`, error);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error handling message:', err);
-      console.log('Message:', JSON.stringify(msg));
+  attach(sock) {
+    this.sock = sock;
+
+    for (const [event, handler] of this.handlers) {
+      sock.ev.on(event, (event) => {
+        handler(sock, event);
+      });
     }
   }
-
-  countListeners() {
-    return this.listeners.size;
-  }
-
-  countPlugins() {
-    return this.plugins.size;
-  }
-
-  countPluginWithPrefix() {
-    return this.pluginWithPrefix.size;
-  }
 }
+
 
