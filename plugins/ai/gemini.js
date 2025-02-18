@@ -26,7 +26,6 @@ export const geminiAsk = async (m, query) => {
     if (resp?.response?.text) {
       const re = await m.reply({ text: resp.response.text() });
       if (re) replyIDs.set(re.key?.id, m.chat);
-      console.log(re, replyIDs);
     } else {
       console.log(resp);
     }

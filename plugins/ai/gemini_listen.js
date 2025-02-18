@@ -21,7 +21,6 @@ export default new Plugin({
   exec: async (m) => {
     let query = m.text;
 
-    console.log(query)
     await geminiAsk(m, query);
   }
 })
