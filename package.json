@@ -1,0 +1,33 @@
+{
+  "name": "Suika",
+  "version": "0.0.1",
+  "description": "Something like that.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon",
+    "start": "NODE_ENV=production node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SoursopID/Suika.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "automation"
+  ],
+  "author": "SoursopID",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/SoursopID/Suika/issues"
+  },
+  "homepage": "https://github.com/SoursopID/Suika#readme",
+  "dependencies": {
+    "baileys": "github:WhiskeySockets/baileys#e254718",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
