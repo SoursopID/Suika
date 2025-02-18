@@ -9,16 +9,17 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../dist/Handler.js";
-import { Plugin } from "../../dist/Plugin.js";
+import { Plugin, AllowOne } from "../../dist/Plugin.js";
 
-
-handler.add(new Plugin({
+export default new Plugin({
   cmds: ["ping", "p"],
-  check: (m) => { return m.fromMe },
+  checkRule: AllowOne,
+  checks: [
+    (m) => { return m.fromMe },
+  ],
   exec: (m) => {
     const start = Date.now();
     const est = Math.floor(start - m.timestamp * 1000);
     m.reply({ text: `${est}ms` });
   }
-}));
+});

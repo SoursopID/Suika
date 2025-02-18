@@ -10,15 +10,14 @@
  */
 
 import { Plugin } from "../../dist/Plugin.js";
-import { handler } from "../../dist/Handler.js";
 
-handler.add(new Plugin({
+export default new Plugin({
   check: (m) => { return m !== undefined },
   exec: (m) => {
 
     let snippet = "";
     if (m.args) {
-      m.args?.forEach(arg => {
+      m.args?.split(' ')?.forEach(arg => {
         if (snippet.length > 30) return false;
         snippet += arg + " ";
 
@@ -33,4 +32,4 @@ handler.add(new Plugin({
       m.pushName, "on", m.key?.remoteJid,
       m.pattern, snippet);
   }
-}));
+});

@@ -30,11 +30,11 @@ export class Ctx {
   pattern: string = '';
   args: string = '';
 
-  contextInfo?: WAContextInfo;
-  quotedMessage?: WAMessage;
-  quotedText?: string;
-  stanzaId?: string;
-  participant?: string;
+  contextInfo?: (WAContextInfo | null);
+  quotedMessage?: (proto.IMessage | null);
+  quotedText?: (string | null);
+  stanzaId?: (string | null);
+  participant?: (string | null);
   expiration: number = 0;
 
   constructor(hand: Handler, sock: WASocket, u: WAMessage) {
@@ -61,6 +61,15 @@ export class Ctx {
     this.text = ext.text;
     this.pattern = this.text?.split(' ')[0];
     this.args = this.text?.slice(this.pattern.length + 1) ?? '';
+
+    this.contextInfo = ext.contextInfo;
+    this.quotedMessage = ext.contextInfo?.quotedMessage;
+
+    const qext = extractTextContext(this.quotedMessage);
+    this.quotedText = qext.text;
+    this.stanzaId = this.contextInfo?.stanzaId;
+    this.participant = this.contextInfo?.participant;
+    this.expiration = this.contextInfo?.expiration ?? 0;
 
 
   }

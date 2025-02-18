@@ -13,11 +13,14 @@ import { Ctx } from "./Ctx.js";
 import { genHEXID } from "./Utils.js";
 
 type CheckRule = string
-const MustAll: CheckRule = "all";
-const AllowOne: CheckRule = "one";
+export const MustAll: CheckRule = "all";
+export const AllowOne: CheckRule = "one";
 
 export interface IPlugin {
   id: string;
+  desc: string;
+  usage: string;
+  tags?: string[];
   cmds?: string[];
   noprefix?: boolean;
   checkRule?: CheckRule;
@@ -28,6 +31,9 @@ export interface IPlugin {
 
 export class Plugin implements IPlugin {
   id: string;
+  desc: string = '';
+  usage: string = '';
+  tags?: string[];
   cmds?: string[];
   noprefix?: boolean;
   checkRule?: CheckRule;

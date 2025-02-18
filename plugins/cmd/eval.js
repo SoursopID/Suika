@@ -9,18 +9,16 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../dist/Handler.js";
 import { Plugin } from "../../dist/Plugin.js";
 
-handler.add(new Plugin({
+export default new Plugin({
   cmds: ["!"],
   noprefix: true,
   check: (m) => { return m.fromMe },
   exec: (m) => {
-    const args = m.args ? m.args.join(" ") : "";
-    const resp = eval(args);
+    const resp = eval(m.args);
     // console.log(resp);
 
     m.reply({ text: String(resp), quote: m.msg });
   }
-}));
+});
