@@ -15,7 +15,6 @@ handler.add({
 
     snippet = snippet.replaceAll("\n", " ");
 
-
     console.log(
       m.id,
       m.update.pushName, "on", m.update.key?.remoteJid,
