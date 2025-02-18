@@ -9,6 +9,8 @@
  * (https://github.com/SoursopID/Suika)
  */
 
+import { genHEXID } from "./utils.js";
+
 function extactTextContext(m) {
   let resp = {
     text: "",
@@ -63,10 +65,10 @@ export class Ctx {
     this.pattern = this.text.split(' ')[0];
     this.args = this.text.split(' ').slice(1);
 
-    this.quoted = this.contextInfo?.quotedMessage;
-    const qext = extactTextContext(this.quoted)
+    this.quotedMessage = this.contextInfo?.quotedMessage;
+    const qext = extactTextContext(this.quotedMessage)
     this.quotedText = qext.text;
-    this.quotedId = this.contextInfo?.stanzaId;
+    this.stanzaId = this.contextInfo?.stanzaId;
     this.participant = this.contextInfo?.participant;
     this.expiration = this.contextInfo?.expiration;
   }
@@ -81,6 +83,6 @@ export class Ctx {
   }
 
   send(to, m) {
-    this.sock.sendMessage(to, m);
+    this.sock.sendMessage(to, m, {messageId: genHEXID(32)});
   }
 }
