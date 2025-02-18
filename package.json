@@ -1,12 +1,15 @@
 {
-  "name": "Suika",
+  "name": "suika",
   "version": "0.0.1",
   "description": "Something like that.",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon",
-    "start": "NODE_ENV=production node src/index.js"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "dev": "NODE_ENV=development nodemon dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +31,9 @@
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "@types/node": "^20.11.19",
+    "@types/qrcode-terminal": "^0.12.2",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.3.3"
   }
 }
