@@ -4,6 +4,6 @@ handler.add({
   cmds: ["ping", "p"],
   check: (m) => { return m.fromMe },
   exec: (m) => {
-    m.reply({ text: "Pong!", quote: m.msg });
+    m.reply({ text: "Pong!" });
   }
 })
