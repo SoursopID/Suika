@@ -25,10 +25,8 @@ function extactTextContext(m) {
     }
 
     if (typeof m[key] === 'object') {
-      if (m[key].caption?.length > 0) { resp.text = m[key].caption; console.log("caption", m[key].caption) }
-      if (m[key].text?.length > 0) {
-        resp.text = m[key].text;
-      }
+      if (m[key].caption?.length > 0) { resp.text = m[key].caption; }
+      if (m[key].text?.length > 0) { resp.text = m[key].text; }
       if (m[key].contextInfo) { resp.contextInfo = m[key].contextInfo; }
     }
   }
@@ -47,18 +45,17 @@ export class Ctx {
   }
 
   parse() {
-    const m = this.update.message;
+    const m = this.update?.message;
+
     this.message = m;
-
-
+    this.timestamp = this.update?.messageTimestamp;
     this.id = this.key?.id;
     this.chat = this.key?.remoteJid;
     this.sender = this.key?.participant;
     this.fromMe = this.key?.fromMe;
+    this.pushName = this.update?.pushName;
 
     const ext = extactTextContext(m)
-
-    // console.log(ext);
 
     this.text = ext.text;
     this.contextInfo = ext.contextInfo;
@@ -72,7 +69,6 @@ export class Ctx {
     this.quotedId = this.contextInfo?.stanzaId;
     this.participant = this.contextInfo?.participant;
     this.expiration = this.contextInfo?.expiration;
-
   }
 
   reply(m) {

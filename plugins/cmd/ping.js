@@ -15,6 +15,8 @@ handler.add({
   cmds: ["ping", "p"],
   check: (m) => { return m.fromMe },
   exec: (m) => {
-    m.reply({ text: "Pong!" });
+    const start = Date.now();
+    const est = Math.floor(start - m.timestamp * 1000);
+    m.reply({ text: `${est}ms` });
   }
 })

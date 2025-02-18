@@ -27,8 +27,9 @@ handler.add({
     snippet = snippet.replaceAll("\n", " ");
 
     console.log(
+      m.timestamp,
       m.id,
-      m.update.pushName, "on", m.update.key?.remoteJid,
+      m.pushName, "on", m.key?.remoteJid,
       m.pattern, snippet);
   }
 })
