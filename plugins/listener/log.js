@@ -28,7 +28,7 @@ export default new Plugin({
 
     console.log(
       m.timestamp,
-      m.id,
+      m.quotedMessage ? `${m.id} => ${m.stanzaId}` : m.id,
       m.pushName, "on", m.key?.remoteJid,
       m.pattern, snippet);
   }

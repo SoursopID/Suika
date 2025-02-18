@@ -9,7 +9,7 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { WASocket, WAMessage, WAContextInfo, WAMessageKey, proto } from 'baileys';
+import { WASocket, WAMessage, WAContextInfo, WAMessageKey, proto, MiscMessageGenerationOptions } from 'baileys';
 import { Handler } from './Handler.js';
 import { genHEXID, extractTextContext } from './Utils.js';
 
@@ -46,7 +46,7 @@ export class Ctx {
     this.parse();
   }
 
-  private parse(): void {
+  private async parse(): Promise<void> {
     this.message = this.update.message
     this.key = this.update.key;
 
@@ -74,15 +74,19 @@ export class Ctx {
 
   }
 
-  reply(m: any): void {
+  async reply(m: any, options?: MiscMessageGenerationOptions): Promise<proto.WebMessageInfo | undefined> {
     if (this.expiration) {
       if (!m.contextInfo) m.contextInfo = {};
       m.contextInfo.expiration = this.expiration;
     }
-    this.send(this.chat, m);
+
+    return this.send(this.chat, m, options);
   }
 
-  send(to: string, m: any): void {
-    this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
+  async send(to: string, m: any, options?: MiscMessageGenerationOptions): Promise<proto.WebMessageInfo | undefined> {
+    if (!options) options = {};
+    options.messageId = genHEXID(32);
+
+    return this.sock.sendMessage(to, m, options);
   }
 }

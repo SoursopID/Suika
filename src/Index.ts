@@ -9,13 +9,13 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { 
-  makeWASocket, 
-  DisconnectReason, 
+import {
+  makeWASocket,
+  DisconnectReason,
   useMultiFileAuthState,
   WASocket,
   ConnectionState,
-  AuthenticationState 
+  AuthenticationState
 } from 'baileys';
 import { handler } from './Handler.js';
 import { loadPlugins } from './Loader.js';
@@ -25,9 +25,9 @@ addCopyrightRecursive('src');
 addCopyrightRecursive('plugins');
 
 async function connectClient(): Promise<WASocket> {
-  const { state, saveCreds }: { 
-    state: AuthenticationState, 
-    saveCreds: () => Promise<void> 
+  const { state, saveCreds }: {
+    state: AuthenticationState,
+    saveCreds: () => Promise<void>
   } = await useMultiFileAuthState('session');
 
   const sock: WASocket = makeWASocket({
@@ -54,10 +54,10 @@ async function connectClient(): Promise<WASocket> {
   return sock;
 }
 
-connectClient().catch((err: Error) => {
+await connectClient().catch((err: Error) => {
   console.error('Error in client:', err);
 });
 
 await loadPlugins('../plugins');
-console.log(`${handler.countListeners()} Loaded listeners`);
-console.log(`${handler.countPlugins()} Loaded plugins ${handler.countPluginWithPrefix()} + prefix`);
+console.log(`${await handler.countListeners()} Loaded listeners`);
+console.log(`${await handler.countPlugins()} Loaded plugins ${await handler.countPluginWithPrefix()} + prefix`);

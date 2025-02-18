@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/SoursopID/Suika#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "baileys": "github:WhiskeySockets/baileys#e254718",
     "qrcode-terminal": "^0.12.0"
   },

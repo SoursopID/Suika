@@ -33,19 +33,19 @@ export class Handler {
     this.pluginWithPrefix = new Map();
   }
 
-  countListeners() {
+  async countListeners() {
     return this.listeners.size;
   }
 
-  countPlugins() {
+  async countPlugins() {
     return this.plugins.size;
   }
 
-  countPluginWithPrefix() {
+  async countPluginWithPrefix() {
     return this.pluginWithPrefix.size;
   }
 
-  add(p: Plugin) {
+  async add(p: Plugin) {
     if (!p.id) p.id = genHEXID(16);
     if (!p.cmds) {
       this.listeners.set(p.id, p);
@@ -65,11 +65,11 @@ export class Handler {
     }
   }
 
-  add_handler(e: keyof BaileysEventMap, h: (sock: WASocket, event: any) => void) {
+  async add_handler(e: keyof BaileysEventMap, h: (sock: WASocket, event: any) => void) {
     this.handlers.set(e, h);
   }
 
-  attach(sock: WASocket) {
+  async attach(sock: WASocket) {
     this.sock = sock;
 
     for (const [e, handler] of this.handlers) {
@@ -82,10 +82,11 @@ export class Handler {
 
 export const handler = new Handler();
 
-handler.add_handler(MESSAGES_UPSERT, async (sock: WASocket, upsert: { messages: WAMessage[]; type: MessageUpsertType }) => {
+await handler.add_handler(MESSAGES_UPSERT, async (sock: WASocket, upsert: { messages: WAMessage[]; type: MessageUpsertType }) => {
   try {
+
     if (!upsert) return
-    if (upsert?.messages?.length <= 0) return;
+    if (upsert?.messages?.length <= 0 || upsert.type === 'append') return;
 
     for (const event of upsert.messages) {
       const ctx = new Ctx(handler, sock, event);

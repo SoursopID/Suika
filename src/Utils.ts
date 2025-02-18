@@ -14,12 +14,12 @@ import { proto } from "baileys/WAProto/index.js";
 
 export function genHEXID(len: number): string {
   return Array.from(
-    { length: len }, 
+    { length: len },
     () => Math.floor(Math.random() * 16).toString(16)
   ).join('').toUpperCase();
 }
 
-export function extractTextContext(m?: (proto.IMessage|null)): { text: string; contextInfo?: (WAContextInfo|null) } {
+export function extractTextContext(m?: (proto.IMessage | null)): { text: string; contextInfo?: (WAContextInfo | null) } {
   let resp = {
     text: "",
     contextInfo: null
@@ -27,10 +27,10 @@ export function extractTextContext(m?: (proto.IMessage|null)): { text: string; c
 
   if (!m) return resp;
 
-  const o: any = Object(m) 
+  const o: any = Object(m)
   for (let key in o) {
     if (o[key] === null || o[key] === undefined) continue;
-    
+
     if (key === 'conversation') {
       if (o[key].length > 0) {
         resp.text = o[key];
