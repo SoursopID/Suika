@@ -9,9 +9,10 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
+import { handler } from "../../dist/Handler.js";
+import { Plugin } from "../../dist/Plugin.js";
 
-handler.add({
+handler.add(new Plugin({
   cmds: ["!"],
   noprefix: true,
   check: (m) => { return m.fromMe },
@@ -22,4 +23,4 @@ handler.add({
 
     m.reply({ text: String(resp), quote: m.msg });
   }
-})
+}));

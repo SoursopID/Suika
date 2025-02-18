@@ -9,9 +9,10 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
+import { Plugin } from "../../dist/Plugin.js";
+import { handler } from "../../dist/Handler.js";
 
-handler.add({
+handler.add(new Plugin({
   check: (m) => { return m !== undefined },
   exec: (m) => {
 
@@ -32,4 +33,4 @@ handler.add({
       m.pushName, "on", m.key?.remoteJid,
       m.pattern, snippet);
   }
-})
+}));

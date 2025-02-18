@@ -9,9 +9,11 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
+import { handler } from "../../dist/Handler.js";
+import { Plugin } from "../../dist/Plugin.js";
 
-handler.add({
+
+handler.add(new Plugin({
   cmds: ["ping", "p"],
   check: (m) => { return m.fromMe },
   exec: (m) => {
@@ -19,4 +21,4 @@ handler.add({
     const est = Math.floor(start - m.timestamp * 1000);
     m.reply({ text: `${est}ms` });
   }
-})
+}));
