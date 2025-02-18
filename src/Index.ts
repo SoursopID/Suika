@@ -9,29 +9,38 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
-import { handler } from "./hand.js";
-import { loadPlugins } from "./loader.js";
-import { addCopyrightRecursive } from "./copyright.js";
+import { 
+  makeWASocket, 
+  DisconnectReason, 
+  useMultiFileAuthState,
+  WASocket,
+  ConnectionState,
+  AuthenticationState 
+} from 'baileys';
+import { handler } from './Handler.js';
+import { loadPlugins } from './Loader.js';
+import { addCopyrightRecursive } from './Copyright.js';
 
 addCopyrightRecursive('src');
 addCopyrightRecursive('plugins');
 
+async function connectClient(): Promise<WASocket> {
+  const { state, saveCreds }: { 
+    state: AuthenticationState, 
+    saveCreds: () => Promise<void> 
+  } = await useMultiFileAuthState('session');
 
-async function connectClient() {
-  const { state, saveCreds } = await useMultiFileAuthState('session');
-
-  const sock = makeWASocket({
+  const sock: WASocket = makeWASocket({
     printQRInTerminal: true,
     auth: state,
     browser: ['macOS', 'Chrome', '10.15.6'],
   });
 
-  sock.ev.on('connection.update', async (update) => {
+  sock.ev.on('connection.update', async (update: Partial<ConnectionState>) => {
     const { connection, lastDisconnect } = update;
 
     if (connection === 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+      const shouldReconnect = (lastDisconnect?.error as any)?.output?.statusCode !== DisconnectReason.loggedOut;
       if (shouldReconnect) {
         connectClient();
       }
@@ -45,13 +54,10 @@ async function connectClient() {
   return sock;
 }
 
-connectClient().catch(err => {
+connectClient().catch((err: Error) => {
   console.error('Error in client:', err);
 });
 
 await loadPlugins('../plugins');
 console.log(`${handler.countListeners()} Loaded listeners`);
 console.log(`${handler.countPlugins()} Loaded plugins ${handler.countPluginWithPrefix()} + prefix`);
-
-
-

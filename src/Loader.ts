@@ -9,13 +9,16 @@
  * (https://github.com/SoursopID/Suika)
  */
 
+// ...existing copyright...
+
 import { readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { handler } from './Handler.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function loadPluginsFromDir(dirPath, relativePath = '') {
+async function loadPluginsFromDir(dirPath: string, relativePath: string = ''): Promise<void> {
     const items = readdirSync(dirPath);
     
     for (const item of items) {
@@ -23,16 +26,14 @@ async function loadPluginsFromDir(dirPath, relativePath = '') {
         const stat = statSync(fullPath);
         
         if (stat.isDirectory()) {
-            // Recursively load plugins from subdirectory
             await loadPluginsFromDir(fullPath, join(relativePath, item));
         } else if (item.endsWith('.js')) {
             try {
                 const importPath = join('..', 'plugins', relativePath, item);
                 const { default: pluginFunction } = await import(importPath);
                 if (typeof pluginFunction === 'function') {
-                    handler.listen(pluginFunction);
+                    handler.add(pluginFunction);
                 }
-                // console.log(`Loaded plugin: ${join(relativePath, item)}`);
             } catch (error) {
                 console.error(`Failed to load plugin ${join(relativePath, item)}:`, error);
             }
@@ -40,9 +41,8 @@ async function loadPluginsFromDir(dirPath, relativePath = '') {
     }
 }
 
-export async function loadPlugins(dirname) {
+export async function loadPlugins(dirname: string): Promise<void> {
     const pluginsFolder = join(__dirname, dirname);
     console.log(`Loading plugins from: ${pluginsFolder}`);
     await loadPluginsFromDir(pluginsFolder);
 }
-
