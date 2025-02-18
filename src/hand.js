@@ -19,7 +19,7 @@ handler.add_handler(MESSAGES_UPSERT, async (sock, upsert) => {
         if (!upsert?.messages) return;
         for (const message of upsert.messages) {
 
-            const ctx = new Ctx(sock, message);
+            const ctx = new Ctx(handler, sock, message);
             // looping through listeners
             for (const [id, listener] of handler.listeners) {
                 if (listener.check(ctx)) {
