@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "description": "Something like that.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/Index.js",
+  "types": "dist/Index.d.ts",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "dev": "NODE_ENV=development nodemon dist/index.js",
-    "start": "NODE_ENV=production node dist/index.js"
+    "dev": "NODE_ENV=development nodemon dist/Index.js",
+    "start": "NODE_ENV=production node dist/Index.js"
   },
   "repository": {
     "type": "git",

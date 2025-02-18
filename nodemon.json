@@ -2,5 +2,5 @@
     "watch": ["dist/", "plugins/"],
     "ext": ".js,.json",
     "ignore": ["session/*", "*.test.js", "node_modules/*"],
-    "exec": "node dist/index.js"
+    "exec": "node dist/Index.js"
 }
