@@ -58,7 +58,11 @@ export class Ctx {
     this.fromMe = this.key?.fromMe ?? false;
     this.pushName = this.update?.pushName ?? '';
 
-    const ext = extractTextContext(this.message);
+    let ext = extractTextContext(this.message);
+    if (this.message?.protocolMessage?.editedMessage) {
+      ext = extractTextContext(this.message.protocolMessage.editedMessage);
+    }
+
     this.text = ext.text;
     this.pattern = this.text?.split(' ')[0];
     this.args = this.text?.slice(this.pattern.length + 1) ?? '';
