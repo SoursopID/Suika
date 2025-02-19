@@ -10,14 +10,13 @@
  */
 
 import { Ctx } from "./Ctx.js";
-import { genHEXID } from "./Utils.js";
 
 type CheckRule = string
 export const MustAll: CheckRule = "all";
 export const AllowOne: CheckRule = "one";
 
 export interface IPlugin {
-  id: string;
+  id?: string;
   desc: string;
   usage: string;
   tags?: string[];
@@ -30,7 +29,7 @@ export interface IPlugin {
 }
 
 export class Plugin implements IPlugin {
-  id: string;
+  id?: string;
   desc: string = '';
   usage: string = '';
   tags?: string[];
@@ -41,7 +40,6 @@ export class Plugin implements IPlugin {
   exec: (ctx: Ctx) => Promise<void> | void;
 
   constructor(p: IPlugin) {
-    this.id = genHEXID(6);
     this.cmds = p.cmds;
     this.noprefix = p.noprefix;
     this.checkRule = p.checkRule ? p.checkRule : MustAll;

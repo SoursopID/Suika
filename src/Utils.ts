@@ -12,7 +12,7 @@
 import { WAContextInfo } from "baileys/lib/index.js";
 import { proto } from "baileys/WAProto/index.js";
 
-export function genHEXID(len: number): string {
+export async function genHEXID(len: number): Promise<string> {
   return Array.from(
     { length: len },
     () => Math.floor(Math.random() * 16).toString(16)
@@ -46,4 +46,9 @@ export function extractTextContext(m?: (proto.IMessage | null)): { text: string;
   }
 
   return resp;
+}
+
+const urlRegex = /(https?:\/\/[^\s]+)/g;
+export async function extractURLs(text: string): Promise<string[]> {
+  return text.match(urlRegex) || [];
 }

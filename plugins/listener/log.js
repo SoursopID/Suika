@@ -9,10 +9,13 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { Plugin } from "../../dist/Plugin.js";
+import { AllowOne } from "../../dist/Plugin.js";
 
-export default new Plugin({
-  check: (m) => { return m !== undefined },
+export default {
+  checkRule: AllowOne,
+  checks: [
+    (m) => { return m },
+  ],
   exec: (m) => {
 
     let snippet = "";
@@ -32,4 +35,4 @@ export default new Plugin({
       m.pushName, "on", m.key?.remoteJid,
       m.pattern, snippet);
   }
-});
+};

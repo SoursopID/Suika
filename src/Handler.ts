@@ -46,7 +46,8 @@ export class Handler {
   }
 
   async add(p: Plugin) {
-    if (!p.id) p.id = genHEXID(16);
+    p = new Plugin(p);
+    if (!p.id) p.id = await genHEXID(16);
     if (!p.cmds) {
       this.listeners.set(p.id, p);
     } else {

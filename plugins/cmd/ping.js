@@ -9,9 +9,9 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { Plugin, AllowOne } from "../../dist/Plugin.js";
+import { AllowOne } from "../../dist/Plugin.js";
 
-export default new Plugin({
+export default {
   cmds: ["ping", "p"],
   checkRule: AllowOne,
   checks: [
@@ -22,4 +22,4 @@ export default new Plugin({
     const est = Math.floor(start - m.timestamp * 1000);
     m.reply({ text: `${est}ms` });
   }
-});
+};

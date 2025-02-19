@@ -19,10 +19,8 @@ import {
 } from 'baileys';
 import { handler } from './Handler.js';
 import { loadPlugins } from './Loader.js';
-import { addCopyrightRecursive } from './Copyright.js';
+import { config } from './Config.js';
 
-addCopyrightRecursive('src');
-addCopyrightRecursive('plugins');
 
 async function connectClient(): Promise<WASocket> {
   const { state, saveCreds }: {
@@ -58,6 +56,11 @@ await connectClient().catch((err: Error) => {
   console.error('Error in client:', err);
 });
 
-await loadPlugins('../plugins');
+const plugin_dirs: string[] = await config.get('plugin_dirs');
+if (plugin_dirs) {
+  for (const dir of plugin_dirs) {
+    await loadPlugins(dir);
+  }
+}
 console.log(`${await handler.countListeners()} Loaded listeners`);
 console.log(`${await handler.countPlugins()} Loaded plugins ${await handler.countPluginWithPrefix()} + prefix`);

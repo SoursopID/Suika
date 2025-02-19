@@ -10,11 +10,10 @@
  */
 
 import { readdirSync, statSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { handler } from './Handler.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const working_dir = process.cwd();
 
 async function loadPluginsFromDir(dirPath: string, relativePath: string = ''): Promise<void> {
   const items = readdirSync(dirPath);
@@ -40,7 +39,7 @@ async function loadPluginsFromDir(dirPath: string, relativePath: string = ''): P
 }
 
 export async function loadPlugins(dirname: string): Promise<void> {
-  const pluginsFolder = join(__dirname, dirname);
+  const pluginsFolder = join(working_dir, dirname);
   console.log(`Loading plugins from: ${pluginsFolder}`);
   await loadPluginsFromDir(pluginsFolder);
 }
