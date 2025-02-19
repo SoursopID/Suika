@@ -9,10 +9,10 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { MustAll, Plugin } from "../../dist/Plugin.js";
+import { MustAll } from "../../dist/Plugin.js";
 import { geminiAsk, replyIDs } from "./gemini.js";
 
-export default new Plugin({
+export default {
   tags: ["gemini"],
   checkRule: MustAll,
   checks: [
@@ -23,4 +23,4 @@ export default new Plugin({
 
     await geminiAsk(m, query);
   }
-})
+};

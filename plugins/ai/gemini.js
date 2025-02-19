@@ -9,13 +9,13 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { AllowOne, Plugin } from "../../dist/Plugin.js";
+import { AllowOne } from "../../dist/Plugin.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY | "<your_key_here>";
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const MODEL_NAME = 'gemini-2.0-flash';
-const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME | 'gemini-2.0-flash';
+const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
 const chat = model.startChat({});
 
 export let replyIDs = new Map();
@@ -33,7 +33,7 @@ export const geminiAsk = async (m, query) => {
 
 }
 
-export default new Plugin({
+export default {
   name: "gemini",
   cmds: ["gm"],
   checkRule: AllowOne,
@@ -45,4 +45,4 @@ export default new Plugin({
     if (m.quotedText?.length > 0) query = m.quotedText;
     await geminiAsk(m, query);
   }
-})
+};
