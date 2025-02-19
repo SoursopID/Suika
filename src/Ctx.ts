@@ -91,7 +91,7 @@ export class Ctx {
 
   async send(to: string, m: any, options?: MiscMessageGenerationOptions): Promise<proto.WebMessageInfo | undefined> {
     if (!options) options = {};
-    options.messageId = genHEXID(32);
+    options.messageId = await genHEXID(32);
 
     return this.sock.sendMessage(to, m, options);
   }
