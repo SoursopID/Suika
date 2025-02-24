@@ -36,12 +36,39 @@ function extactTextContext(m) {
   return resp;
 }
 
+/**
+ * @typedef {Object} Ctx - Context
+ * @property {import('./handler.js').Handler} [handler] - Handler instance
+ * @property {import('baileys').WASocket} [sock] - Baileys socket client
+ * @property {import('baileys').WAMessage} [update] - Message update
+ * @property {import('baileys').WAMessageKey} [key] - Message key
+ * @property {import('baileys').WAMessage} [message] - Message
+ * @property {number} [timestamp] - Message timestamp
+ * @property {string} [id] - Message ID
+ * @property {string} [chat] - Chat ID
+ * @property {string} [sender] - Sender ID
+ * @property {boolean} [fromMe] - From me
+ * @property {string} [pushName] - Push name
+ * @property {string} [text] - Message text
+ * @property {string} [pattern] - Command pattern
+ * @property {string} [args] - Command arguments
+ * @property {import('baileys').WAContextInfo} [contextInfo] - Context info
+ * @property {import('baileys').WAMessage} [quotedMessage] - Quoted message
+ * @property {string} [quotedText] - Quoted message text
+ * @property {string} [stanzaId] - Stanza ID
+ * @property {string} [participant] - Participant ID
+ * @property {number} [expiration] - Expiration time
+ * @property {Array<string>} [mentions] - Mentioned participants
+ */
 export class Ctx {
-  constructor(hand, sock, event) {
-    this.hand = hand;
-    this.sock = sock;
-    this.update = event;
-    this.key = this.update.key;
+  /**
+   * @params {Object} options - Context options
+   */
+  constructor(options) {
+    this.handler = options.handler;
+    this.sock = options.sock;
+    this.update = options.update;
+    this.key = options.update?.key;
 
     this.parse();
   }
@@ -50,10 +77,10 @@ export class Ctx {
     const m = this.update?.message;
 
     this.message = m;
-    this.timestamp = this.update?.messageTimestamp;
+    this.timestamp = this.update?.messageTimestamp ? this.update.messageTimestamp * 1000 : 0;
     this.id = this.key?.id;
     this.chat = this.key?.remoteJid;
-    this.sender = this.key?.participant;
+    this.sender = this.key?.participant || this.update?.participant;
     this.fromMe = this.key?.fromMe;
     this.pushName = this.update?.pushName;
 
@@ -62,8 +89,8 @@ export class Ctx {
     this.text = ext.text;
     this.contextInfo = ext.contextInfo;
 
-    this.pattern = this.text.split(' ')[0];
-    this.args = this.text.split(' ').slice(1);
+    this.pattern = this.text?.split(' ')[0];
+    this.args = this.text?.slice(this.pattern.length)?.trim();
 
     this.quotedMessage = this.contextInfo?.quotedMessage;
     const qext = extactTextContext(this.quotedMessage)
@@ -83,6 +110,6 @@ export class Ctx {
   }
 
   send(to, m) {
-    this.sock.sendMessage(to, m, {messageId: genHEXID(32)});
+    this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
   }
 }

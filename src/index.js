@@ -11,12 +11,7 @@
 
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { handler } from "./hand.js";
-import { loadPlugins } from "./loader.js";
-import { addCopyrightRecursive } from "./copyright.js";
-
-addCopyrightRecursive('src');
-addCopyrightRecursive('plugins');
-
+import { pino } from 'pino';
 
 async function connectClient() {
   const { state, saveCreds } = await useMultiFileAuthState('session');
@@ -25,6 +20,7 @@ async function connectClient() {
     printQRInTerminal: true,
     auth: state,
     browser: ['macOS', 'Chrome', '10.15.6'],
+    logger: pino({ level: 'warn' }),
   });
 
   sock.ev.on('connection.update', async (update) => {
@@ -49,9 +45,8 @@ connectClient().catch(err => {
   console.error('Error in client:', err);
 });
 
-await loadPlugins('../plugins');
-console.log(`${handler.countListeners()} Loaded listeners`);
-console.log(`${handler.countPlugins()} Loaded plugins ${handler.countPluginWithPrefix()} + prefix`);
+console.log(`${await handler.countListeners()} Loaded listeners`);
+console.log(`${await handler.countCommands()} prefix`);
 
 
 

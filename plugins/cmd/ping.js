@@ -9,14 +9,20 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
+import { formatElapse } from "../../src/utils.js";
 
-handler.add({
+/** @type {import('../../src/plugin.js').Plugin} */
+export const on = {
   cmds: ["ping", "p"],
-  check: (m) => { return m.fromMe },
+  // timeout: 120,
+  checks: [
+    (m) => { return m.fromMe; }
+  ],
+
+  /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: (m) => {
     const start = Date.now();
-    const est = Math.floor(start - m.timestamp * 1000);
-    m.reply({ text: `${est}ms` });
+    const est = Math.floor(start - m.timestamp);
+    m.reply({ text: formatElapse(est) });
   }
-})
+};

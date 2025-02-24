@@ -10,42 +10,5 @@
  */
 
 import { Handler } from "./handler.js";
-import { MESSAGES_UPSERT } from "./event.js";
-import { Ctx } from "./ctx.js";
 
-export const handler = new Handler();
-handler.add_handler(MESSAGES_UPSERT, async (sock, upsert) => {
-    try {
-        if (!upsert?.messages) return;
-        for (const message of upsert.messages) {
-
-            const ctx = new Ctx(handler, sock, message);
-            // looping through listeners
-            for (const [id, listener] of handler.listeners) {
-                if (listener.check(ctx)) {
-                    try {
-                        listener.exec(ctx);
-                    } catch (error) {
-                        console.error(`Error executing listener ${id}:`, error);
-                    }
-                }
-            }
-
-            // looping through plugins with prefix
-            if (handler.pluginWithPrefix.has(ctx.pattern)) {
-                const id = handler.pluginWithPrefix.get(ctx.pattern);
-                const plugin = handler.plugins.get(id);
-                if (plugin.check(ctx)) {
-                    try {
-                        plugin.exec(ctx);
-                    } catch (error) {
-                        console.error(`Error executing plugin ${id}:`, error);
-                    }
-                }
-            }
-        }
-    } catch (err) {
-        console.error('Error handling message:', err);
-        console.log('Message:', JSON.stringify(upsert));
-    }
-});
+export const handler = new Handler('./plugins/');

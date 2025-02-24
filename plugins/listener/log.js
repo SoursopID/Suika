@@ -9,27 +9,44 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
 
-handler.add({
-  check: (m) => { return m !== undefined },
+import { AllowOne } from "../../src/plugin.js";
+import { formatElapse, shortTo } from "../../src/utils.js";
+
+/** @type {import('../../src/plugin.js').Plugin} */
+export const on = {
+  checkRule: AllowOne,
+  checks: [
+    (m) => { return m !== undefined },
+  ],
+
+  /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: (m) => {
+    let logs = [m.timestamp];
+    let elapse = 0;
+    if (m.timestamp) {
+      elapse = Date.now() - m.timestamp;
+    }
+
+    logs.push(formatElapse(elapse))
+    logs.push(m.quotedMessage ? `${shortTo(m.id, 8)} => ${shortTo(m.stanzaId, 8)}` : shortTo(m.id, 8));
+
+    m.pushName != '' ? logs.push(m.pushName) : logs.push(m.sender)
 
     let snippet = "";
     if (m.args) {
-      m.args?.forEach(arg => {
+      m.args?.split(' ')?.forEach(arg => {
         if (snippet.length > 30) return false;
         snippet += arg + " ";
 
       })
     };
-
     snippet = snippet.replaceAll("\n", " ");
 
-    console.log(
-      m.timestamp,
-      m.id,
-      m.pushName, "on", m.key?.remoteJid,
-      m.pattern, snippet);
+    logs.push("on", m.key?.remoteJid, m.pattern, snippet);
+
+    console.log(...logs);
   }
-})
+};
+
+export const after = on;

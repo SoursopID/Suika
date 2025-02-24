@@ -9,17 +9,18 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { handler } from "../../src/hand.js";
-
-handler.add({
-  cmds: ["!"],
+/** @type {import('../../src/plugin.js').Plugin} */
+export const on = {
+  cmds: [">"],
   noprefix: true,
-  check: (m) => { return m.fromMe },
+  checks: [
+    (m) => { return m.fromMe },
+  ],
+
+  /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: (m) => {
-    const args = m.args ? m.args.join(" ") : "";
-    const resp = eval(args);
-    // console.log(resp);
+    const resp = eval(m.args);
 
     m.reply({ text: String(resp), quote: m.msg });
   }
-})
+};

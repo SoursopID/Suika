@@ -1,5 +1,5 @@
 {
-  "name": "Suika",
+  "name": "suika",
   "version": "0.0.1",
   "description": "Something like that.",
   "type": "module",
@@ -24,7 +24,9 @@
   },
   "homepage": "https://github.com/SoursopID/Suika#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.22.0",
     "baileys": "github:WhiskeySockets/baileys#e254718",
+    "pino": "^9.6.0",
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {
