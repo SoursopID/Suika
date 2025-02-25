@@ -11,52 +11,88 @@
 
 import { genHEXID } from './utils.js';
 
+/**
+ * @typedef {string} CheckRule
+ */
+
+/** @type {CheckRule} */
 export const MustAll = 'all';
+
+/** @type {CheckRule} */
 export const AllowOne = 'one';
 
 /**
- * @typedef {Object} Plugin
+ * @typedef {Object} Plugin - Plugin configuration
  * @property {import('baileys').WASocket} [sock] - Baileys socket client
  * @property {import('./handler.js').Handler} [handler] - Plugin handler
- * @property {string} [id] - Unique identifier
- * @property {string} [desc] - Description
+ * @property {string} [id] - Unique identifier (auto-generated if not provided)
+ * @property {string} [desc] - Plugin description
  * @property {string} [usage] - Usage instructions
- * @property {string[]} [tags] - Category tags
- * @property {string[]} [cmds] - Command triggers
- * @property {boolean} [disabled] - Whether the plugin is disabled
- * @property {number} [timeout] - Command timeout in ms
- * @property {boolean} [noprefix] - Skip command prefix
- * @property {string} [checkRule] - Check rule (MustAll or AllowOne)
- * @property {Array<Function>} [checks] - Validation functions
- * @property {Function} [check] - Single validation function
- * @property {Function} [exec] - Command execution function
+ * @property {string[]} [tags] - Category tags (defaults to [])
+ * @property {string[]} [cmds] - Command triggers (converted to lowercase)
+ * @property {boolean} [disabled] - Whether plugin is disabled (defaults to false)
+ * @property {number} [timeout] - Command timeout in ms (defaults to 0)
+ * @property {boolean} [noprefix] - Skip command prefix (defaults to false)
+ * @property {CheckRule} [checkRule] - Check rule type (defaults to MustAll)
+ * @property {Array<(ctx: import('./ctx.js').Ctx) => boolean>} [checks] - Validation functions
+ * @property {(ctx: import('./ctx.js').Ctx) => void} exec - Command execution function
+ */
+
+/** 
+ * Plugin that can listen or execute commands
+ * @class 
  */
 export class Plugin {
 
   /**
    * Create a new plugin
-   * @param {PluginOptions} options - Plugin configuration
+   * @param {Plugin} options - Plugin configuration
    */
   constructor(options) {
+    /** @type {import('baileys').WASocket} */
     this.sock = options.sock;
+
+    /** @type {import('./handler.js').Handler} */
     this.handler = options.handler;
+
+    /** @type {string} */
     this.id = options.id ?? genHEXID(6);
+
+    /** @type {string} */
     this.desc = options.desc;
+
+    /** @type {string} */
     this.usage = options.usage;
-    this.tags = options.tags || [];
+
+    /** @type {string[]} */
+    this.tags = options.tags ?? [];
+
+    /** @type {string[]} */
     this.cmds = options.cmds?.map(cmd => cmd.toLowerCase());
-    this.disabled = options.disabled || false;
-    this.timeout = options.timeout || 0;
-    this.noprefix = options.noprefix || false;
-    this.checkRule = options.checkRule || MustAll;
-    this.checks = options.checks || [];
+
+    /** @type {boolean} */
+    this.disabled = options.disabled ?? false;
+
+    /** @type {number} */
+    this.timeout = options.timeout ?? 0;
+
+    /** @type {boolean} */
+    this.noprefix = options.noprefix ?? false;
+
+    /** @type {CheckRule} */
+    this.checkRule = options.checkRule ?? MustAll;
+
+    /** @type {Array<Function>} */
+    this.checks = options.checks ?? [];
+
+    /** @type {Function} */
     this.exec = options.exec;
   }
 
   /**
-   * Check if the plugin is valid
-   * @param {import('./ctx.js').Ctx} ctx - Context
-   * @returns {boolean}
+   * Check if the plugin can execute for given context
+   * @param {import('./ctx.js').Ctx} ctx - Message context
+   * @returns {boolean} True if all checks pass according to checkRule
    */
   check(ctx) {
     if (this.disabled == true) {

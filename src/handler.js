@@ -22,21 +22,22 @@ export const DEFAULT_PREFIX = "/.";
 /**
  * @typedef {Object} Handler - Plugin handler
  * @property {import('baileys').WASocket} [sock] - Baileys socket client
- * @property {Map<string, import('./plugin.js').Plugin>} [plugins] - Plugins
- * @property {Array<string>} [listeners] - Listeners
- * @property {Map<string, string>} [commands] - Commands
- * @property {string} [pluginDir] - Plugin directory
+ * @property {Map<string, import('./plugin.js').Plugin>} [plugins] - Map of plugin ID to Plugin instance
+ * @property {Array<string>} [listeners] - Array of listener plugin IDs
+ * @property {Map<string, string>} [commands] - Map of command pattern to plugin ID
+ * @property {string} [pluginDir] - Plugin directory path
  * @property {string} [prefix] - Command prefix
- * @property {Map<string, import('./plugin.js').Plugin>} [afterSend] - Handlers
- * @property {Promise<void>} [ready] -
+ * @property {Map<string, Function>} [handlers] - Map of event name to handler function
+ * @property {Map<string, import('./plugin.js').Plugin>} [afterSend] - After-send handlers
+ * @property {Promise<void>} [ready] - Plugin loading completion promise
  */
 export class Handler {
   /**
-   * @param {string} pluginDir - Plugin directory
+   * Creates a new Handler instance
+   * @param {string} pluginDir - Plugin directory path
    * @param {string} prefix - Command prefix
    */
   constructor(pluginDir, prefix) {
-    console.log(pluginDir)
     this.pluginDir = pluginDir ? path.resolve(pluginDir) : '../plugins/';
     this.prefix = prefix ?? DEFAULT_PREFIX;
 
@@ -52,7 +53,8 @@ export class Handler {
   }
 
   /**
-   * @returns {number} - Number of listeners
+   * Returns the number of registered listeners
+   * @returns {Promise<number>} Number of listeners
    */
   async countListeners() {
     await this.ready;
@@ -60,7 +62,8 @@ export class Handler {
   }
 
   /**
-   * @returns {number} - Number of plugins
+   * Returns the number of loaded plugins
+   * @returns {Promise<number>} Number of plugins
    */
   async countPlugins() {
     await this.ready;
@@ -68,7 +71,8 @@ export class Handler {
   }
 
   /**
-   * @returns {number} - Number of commands
+   * Returns the number of registered commands
+   * @returns {Promise<number>} Number of commands
    */
   async countCommands() {
     await this.ready;
@@ -76,6 +80,7 @@ export class Handler {
   }
 
   /**
+   * Registers an after-send plugin handler
    * @param {import('./plugin.js').Plugin} p - Plugin instance
    */
   after(p) {
@@ -84,17 +89,20 @@ export class Handler {
   }
 
   /**
-   * 
-   * @param {import('./ctx.js').Ctx} ctx 
+   * Executes after-send handlers for a message
+   * @param {import('./ctx.js').Ctx} ctx - Message context
    */
   after_send(ctx) {
-    for (const [id, p] of this.afterSend.entries()) {
-      p.exec(ctx);
+    for (const [_, p] of this.afterSend.entries()) {
+      if (p.exec) {
+        p.exec(ctx);
+      }
     }
   }
 
   /**
-   * @param {import('./plugin.js').Plugin} p - Plugin instance  
+   * Registers a new plugin
+   * @param {import('./plugin.js').Plugin} p - Plugin instance
    */
   on(p) {
     const newp = new Plugin(p);
@@ -102,6 +110,10 @@ export class Handler {
     this.reloadPlugins();
   }
 
+  /**
+   * Reloads and reorganizes plugin commands and listeners
+   * @private
+   */
   reloadPlugins() {
     // clear commands and listeners
     this.commands.clear();
@@ -126,14 +138,16 @@ export class Handler {
   }
 
   /**
-  * @param {string} e - Event name
-  * @param {Function} f - Event handler
-  */
+   * Adds an event handler
+   * @param {string} e - Event name
+   * @param {(handler: Handler, sock: import('baileys').WASocket, event: any) => void} f - Event handler function
+   */
   add_handler(e, f) {
     this.handlers.set(e, f);
   }
 
   /**
+   * Attaches a socket client and registers event handlers
    * @param {import('baileys').WASocket} sock - Baileys socket client
    */
   attach(sock) {
@@ -147,7 +161,9 @@ export class Handler {
   }
 
   /**
-   * @param {string} dir - Plugin directory
+   * Loads plugins from a directory
+   * @param {string} dir - Plugin directory path
+   * @returns {Promise<void>}
    */
   async pluginReload(dir) {
     const files = readdirSync(dir);
@@ -179,9 +195,13 @@ export class Handler {
 }
 
 /**
- * @param {Handler} handler 
+ * Handles message upsert events from WhatsApp
+ * @param {Handler} handler - Handler instance
  * @param {import('baileys').WASocket} sock - Baileys socket client
- * @param {{messages: import('baileys').WAMessage[], type: import('baileys').MessageUpsertType}} upsert - Message upsert
+ * @param {Object} upsert - Message upsert event
+ * @param {import('baileys').WAMessage[]} upsert.messages - Array of new/updated messages
+ * @param {'append'|'notify'} upsert.type - Type of update (append for sent messages, notify for received)
+ * @private
  */
 function handle_upsert(handler, sock, upsert) {
   try {

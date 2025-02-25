@@ -11,6 +11,11 @@
 
 import { genHEXID } from "./utils.js";
 
+/**
+ * Extracts text content and context info from a message
+ * @param {Partial<import('baileys').WAMessage>} m - Message object
+ * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null}} Extracted text and context
+ */
 function extactTextContext(m) {
   let resp = {
     text: "",
@@ -62,12 +67,22 @@ function extactTextContext(m) {
  */
 export class Ctx {
   /**
-   * @params {Object} options - Context options
+   * @param {Object} options - Options for creating a new Context
+   * @param {import('./handler.js').Handler} options.handler - Handler instance
+   * @param {import('baileys').WASocket} options.sock - Baileys socket client 
+   * @param {import('baileys').WAMessage} options.update - Message update
    */
   constructor(options) {
+    /** @type {import('./handler.js').Handler} */
     this.handler = options.handler;
+
+    /** @type {import('baileys').WASocket} */
     this.sock = options.sock;
+
+    /** @type {import('baileys').WAMessage} */
     this.update = options.update;
+
+    /** @type {import('baileys').WAMessageKey} */
     this.key = options.update?.key;
 
     this.parse();
@@ -80,7 +95,7 @@ export class Ctx {
     this.timestamp = this.update?.messageTimestamp ? this.update.messageTimestamp * 1000 : 0;
     this.id = this.key?.id;
     this.chat = this.key?.remoteJid;
-    this.sender = this.key?.participant || this.update?.participant;
+    this.sender = this.key?.participant ?? this.update?.participant;
     this.fromMe = this.key?.fromMe;
     this.pushName = this.update?.pushName;
 
@@ -100,16 +115,27 @@ export class Ctx {
     this.expiration = this.contextInfo?.expiration;
   }
 
+  /**
+   * Reply to the current message
+   * @param {Partial<import('baileys').WAMessage>} m - Message object to send as reply
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   */
   reply(m) {
     if (this.expiration) {
       if (m.contextInfo === undefined || m.contextInfo === null) m.contextInfo = {};
       m.contextInfo.expiration = this.expiration;
     }
 
-    this.send(this.chat, m);
+    return this.send(this.chat, m);
   }
 
+  /** 
+   * Send message to chat
+   * @param {string} to - Chat ID
+   * @param {Partial<import('baileys').WAMessage>} m - Message object
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   */
   send(to, m) {
-    this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
+    return this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
   }
 }

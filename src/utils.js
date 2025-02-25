@@ -10,9 +10,9 @@
  */
 
 /**
- * Generate a random hex string
- * @param {number} len - Length of the hex string
- * @returns {string}
+ * Generate a random hexadecimal string of specified length
+ * @param {number} len - Length of the desired hex string
+ * @returns {string} Uppercase hexadecimal string
  */
 export function genHEXID(len) {
   const hex = '0123456789abcdef';
@@ -23,15 +23,18 @@ export function genHEXID(len) {
   return res.toUpperCase();
 }
 
+/** Number of milliseconds in a second */
 const SECOND = 1000;
+/** Number of milliseconds in a minute */
 const MINUTE = 60 * SECOND;
+/** Number of milliseconds in an hour */
 const HOUR = 60 * MINUTE;
 
 /** 
-  * Format elapse time to string
-  * @param {number} i - Elapse time in milliseconds
-  * @returns {string} Elapse time in string format
-  */
+ * Format elapsed time into human readable string
+ * @param {number} elapse - Time in milliseconds
+ * @returns {string} Formatted string (e.g. "5h 30m 20s", "45m 30s", "30s", "100ms")
+ */
 export function formatElapse(elapse) {
   let est = `${elapse}ms`;
   if (elapse >= HOUR) {
@@ -45,11 +48,13 @@ export function formatElapse(elapse) {
 }
 
 /**
-  * Shorten string to specified length to hide middle part
-  * @param {string} str - String to be shortened
-  * @param {number} len - Length to be shortened to
-  * @returns {string} Shortened string
-  */
+ * Shorten a string by replacing middle characters with ".."
+ * @param {string} str - Input string
+ * @param {number} len - Desired total length
+ * @returns {string} Shortened string or empty string if input is falsy
+ * @example
+ * shortTo("abcdefghijk", 5) // returns "ab..k"
+ */
 export function shortTo(str, len) {
   if (!str) return '';
   if (str.length > len) {
@@ -59,13 +64,14 @@ export function shortTo(str, len) {
   }
 }
 
-
+/** Regular expression for matching URLs in text */
 const urlRegex = /(https?:\/\/[^\s]+)/g;
+
 /**
- * Extract URLs from text
- * @param {string} text - Text to extract URLs from
- * @returns {string[]} Array of URLs
+ * Extract URLs from text content
+ * @param {string} text - Text to search for URLs
+ * @returns {Promise<string[]>} Array of found URLs, or empty array if none found
  */
 export async function extractURLs(text) {
-  return text.match(urlRegex) | [];
+  return text.match(urlRegex) ?? [];
 }
