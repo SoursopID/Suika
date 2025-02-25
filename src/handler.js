@@ -21,13 +21,14 @@ export const DEFAULT_PREFIX = "/.";
 
 /**
  * @typedef {Object} Handler - Plugin handler
- * @property {import('baileys').WASocket} sock - Baileys socket client
- * @property {Map<string, import('./plugin.js').Plugin>} plugins - Plugins
- * @property {Array<string>} listeners - Listeners
- * @property {Map<string, string>} commands - Commands
- * @property {string} pluginDir - Plugin directory
- * @property {string} prefix - Command prefix
- * @property {Map<string, import('./plugin.js').Plugin>} afterSend - Handlers
+ * @property {import('baileys').WASocket} [sock] - Baileys socket client
+ * @property {Map<string, import('./plugin.js').Plugin>} [plugins] - Plugins
+ * @property {Array<string>} [listeners] - Listeners
+ * @property {Map<string, string>} [commands] - Commands
+ * @property {string} [pluginDir] - Plugin directory
+ * @property {string} [prefix] - Command prefix
+ * @property {Map<string, import('./plugin.js').Plugin>} [afterSend] - Handlers
+ * @property {Promise<void>} [ready] -
  */
 export class Handler {
   /**
@@ -45,29 +46,32 @@ export class Handler {
     this.commands = new Map();
     this.afterSend = new Map();
 
-    this.handlers.set(MESSAGES_UPSERT, this.#handle_ipsert);
+    this.handlers.set(MESSAGES_UPSERT, handle_upsert);
 
-    this.pluginReload(this.pluginDir);
+    this.ready = this.pluginReload(this.pluginDir);
   }
 
   /**
    * @returns {number} - Number of listeners
    */
-  countListeners() {
+  async countListeners() {
+    await this.ready;
     return this.listeners.length;
   }
 
   /**
    * @returns {number} - Number of plugins
    */
-  countPlugins() {
+  async countPlugins() {
+    await this.ready;
     return this.plugins.size;
   }
 
   /**
    * @returns {number} - Number of commands
    */
-  countCommands() {
+  async countCommands() {
+    await this.ready;
     return this.commands.size;
   }
 
@@ -79,7 +83,11 @@ export class Handler {
     this.afterSend.set(newp.id, newp);
   }
 
-  #after_send(ctx) {
+  /**
+   * 
+   * @param {import('./ctx.js').Ctx} ctx 
+   */
+  after_send(ctx) {
     for (const [id, p] of this.afterSend.entries()) {
       p.exec(ctx);
     }
@@ -88,7 +96,7 @@ export class Handler {
   /**
    * @param {import('./plugin.js').Plugin} p - Plugin instance  
    */
-  add(p) {
+  on(p) {
     const newp = new Plugin(p);
     this.plugins.set(newp.id, newp);
     this.reloadPlugins();
@@ -139,52 +147,6 @@ export class Handler {
   }
 
   /**
-   * @param {Handler} handler 
-   * @param {import('baileys').WASocket} sock - Baileys socket client
-   * @param {{messages: import('baileys').WAMessage[], type: import('baileys').MessageUpsertType}} upsert - Message upsert
-   */
-  #handle_ipsert(handler, sock, upsert) {
-    try {
-      if (!upsert?.messages) return;
-
-      for (const message of upsert.messages) {
-        const ctx = new Ctx({ handler: handler, sock: sock, update: message });
-        if (upsert?.type === 'notify') {
-          // looping through listeners
-          for (const pid of handler.listeners) {
-            const listener = handler.plugins.get(pid);
-            if (listener?.check(ctx)) {
-              try {
-                listener.exec(ctx);
-              } catch (error) {
-                console.error(`Error executing listener ${pid}:`, error);
-              }
-            }
-          }
-
-          // looping through plugins with prefix
-          if (handler.commands.has(ctx.pattern)) {
-            const id = handler.commands.get(ctx.pattern);
-            const plugin = handler.plugins.get(id);
-            if (plugin.check(ctx)) {
-              try {
-                plugin.exec(ctx);
-              } catch (error) {
-                console.error(`Error executing plugin ${id}:`, error);
-              }
-            }
-          }
-        } else if (upsert?.type === 'append') {
-          handler.#after_send(ctx);
-        }
-      }
-    } catch (err) {
-      console.error('Error handling message:', err);
-      console.log('Message:', JSON.stringify(upsert));
-    }
-  }
-
-  /**
    * @param {string} dir - Plugin directory
    */
   async pluginReload(dir) {
@@ -193,14 +155,14 @@ export class Handler {
       const path = `${dir}/${file}`.replaceAll('//', '/');
 
       if (statSync(path)?.isDirectory()) {
-        this.pluginReload(path);
+        await this.pluginReload(path);
       }
 
       if (file.endsWith('.js')) {
         try {
           const plugin = await import(path);
           if (plugin.on) {
-            this.add(plugin.on);
+            this.on(plugin.on);
           }
 
           if (plugin.after) {
@@ -213,5 +175,51 @@ export class Handler {
         }
       }
     }
+  }
+}
+
+/**
+ * @param {Handler} handler 
+ * @param {import('baileys').WASocket} sock - Baileys socket client
+ * @param {{messages: import('baileys').WAMessage[], type: import('baileys').MessageUpsertType}} upsert - Message upsert
+ */
+function handle_upsert(handler, sock, upsert) {
+  try {
+    if (!upsert?.messages) return;
+
+    for (const message of upsert.messages) {
+      const ctx = new Ctx({ handler: handler, sock: sock, update: message });
+      if (upsert?.type === 'notify') {
+        // looping through listeners
+        for (const pid of handler.listeners) {
+          const listener = handler.plugins.get(pid);
+          if (listener?.check(ctx)) {
+            try {
+              listener.exec(ctx);
+            } catch (error) {
+              console.error(`Error executing listener ${pid}:`, error);
+            }
+          }
+        }
+
+        // looping through plugins with prefix
+        if (handler.commands.has(ctx.pattern)) {
+          const id = handler.commands.get(ctx.pattern);
+          const plugin = handler.plugins.get(id);
+          if (plugin.check(ctx)) {
+            try {
+              plugin.exec(ctx);
+            } catch (error) {
+              console.error(`Error executing plugin ${id}:`, error);
+            }
+          }
+        }
+      } else if (upsert?.type === 'append') {
+        handler.after_send(ctx);
+      }
+    }
+  } catch (err) {
+    console.error('Error handling message:', err);
+    console.log('Message:', JSON.stringify(upsert));
   }
 }

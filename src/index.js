@@ -10,11 +10,22 @@
  */
 
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
-import { handler } from "./hand.js";
 import { pino } from 'pino';
+import { Handler } from "./handler.js";
 
-async function connectClient() {
-  const { state, saveCreds } = await useMultiFileAuthState('session');
+/** 
+ * @param {{sessionDir: string, pluginDir: string}} options - sessionDir: directory 
+ */
+async function clientStart(options) {
+  const sessionDir = options?.sessionDir ?? 'session';
+  const pluginDir = options?.pluginDir ?? './plugins';
+
+  console.log(`sessionDir:`, sessionDir);
+  console.log(`pluginDir:`, pluginDir);
+
+  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+
+  const handler = new Handler(pluginDir)
 
   const sock = makeWASocket({
     printQRInTerminal: true,
@@ -29,7 +40,7 @@ async function connectClient() {
     if (connection === 'close') {
       const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
       if (shouldReconnect) {
-        connectClient();
+        clientStart();
       }
     }
   });
@@ -38,15 +49,16 @@ async function connectClient() {
 
   handler.attach(sock);
 
+  console.log(`${await handler.countListeners()} listeners attached.`);
+  console.log(`${await handler.countCommands()} commands loaded.`);
+
   return sock;
 }
 
-connectClient().catch(err => {
+clientStart().catch(err => {
   console.error('Error in client:', err);
 });
 
-console.log(`${await handler.countListeners()} Loaded listeners`);
-console.log(`${await handler.countCommands()} prefix`);
 
 
 
