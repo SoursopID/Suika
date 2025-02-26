@@ -13,8 +13,9 @@ import fs from 'fs';
 
 /**
  * @typedef {Object} Config
- * @property {string} [jsonName]
- * @property {Map<string, any>} [data]
+ * @property {string} [jsonName] - The name of the JSON file.
+ * @property {Map<string, any>} [data] - The data of the config.
+ * @property {boolean} [autosave] - If true, the config will be saved automatically when changed.
  */
 
 /**
@@ -26,6 +27,7 @@ export class Config {
    * @param {Object} options 
    * @param {string} options.jsonName
    * @param {string} options.unique
+   * @param {boolean} options.autosave
    */
   constructor(options) {
     /** @type {string} */
@@ -33,6 +35,9 @@ export class Config {
 
     /** @type {Map<string, any>} */
     this.data = new Map();
+
+    /** @type {boolean} */
+    this.autosave = options?.autosave ?? false;
 
     this.load(this.jsonName);
   }
@@ -77,11 +82,13 @@ export class Config {
    */
   set(key, value) {
     this.data.set(key, value);
+    if (this.autosave) this.save();
   }
 
   /** @param {string} key */
   delete(key) {
     this.data.delete(key);
+    if (this.autosave) this.save();
   }
 
   /** @param {string} key */
@@ -91,6 +98,7 @@ export class Config {
 
   clear() {
     this.data.clear();
+    if (this.autosave) this.save();
   }
 
 }
