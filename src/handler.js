@@ -13,9 +13,10 @@ import path from "path";
 import { Ctx } from "./ctx.js";
 import { MESSAGES_UPSERT } from "./event.js";
 import { Plugin } from "./plugin.js";
-import { readdirSync, statSync } from 'fs';
+import { mkdirSync, readdirSync, statSync } from 'fs';
 import { platform } from "os";
 import { pathToFileURL } from "url";
+import { Config } from "./config.js";
 
 
 
@@ -32,22 +33,33 @@ export const DEFAULT_PREFIX = "/.";
  * @property {Map<string, Function>} [handlers] - Map of event name to handler function
  * @property {Map<string, import('./plugin.js').Plugin>} [afterSend] - After-send handlers
  * @property {Promise<void>} [ready] - Plugin loading completion promise
+ * @property {Map<string, number>} [expirations] - Map of plugin ID to expiration timestamp
  */
 export class Handler {
   /**
    * Creates a new Handler instance
-   * @param {string} pluginDir - Plugin directory path
-   * @param {string} prefix - Command prefix
+   * @param {Object} options - Handler options
+   * @param {string} options.pluginDir - Plugin directory path
+   * @param {string} options.dataDir - Data directory path
+   * @param {string} options.prefix - Command prefix
    */
-  constructor(pluginDir, prefix) {
-    this.pluginDir = pluginDir ? path.resolve(pluginDir) : '../plugins/';
-    this.prefix = prefix ?? DEFAULT_PREFIX;
+  constructor(options) {
+    if (!options) throw new Error('Handler options are required');
+    if (!options?.pluginDir || options?.pluginDir?.length === 0) throw new Error('Plugin directory path is required');
+    if (!options?.dataDir || options?.dataDir?.length === 0) throw new Error('Data directory path is required');
+
+    const dataStat = statSync(options.dataDir);
+    if (!dataStat?.isDirectory()) mkdirSync(options.dataDir, { recursive: true });
+
+    this.pluginDir = path.resolve(options.pluginDir)
+    this.prefix = options.prefix ?? DEFAULT_PREFIX;
 
     this.handlers = new Map();
     this.plugins = new Map();
     this.listeners = [];
     this.commands = new Map();
     this.afterSend = new Map();
+    this.expirations = new Config({ jsonName: path.join(options.dataDir, 'expirations.json'), autosave: true });
 
     this.handlers.set(MESSAGES_UPSERT, handle_upsert);
 
@@ -119,7 +131,7 @@ export class Handler {
   reloadPlugins() {
     // clear commands and listeners
     this.commands.clear();
-    this.listeners = [];
+    this.listeners.length = 0;
 
     for (const [id, p] of this.plugins.entries()) {
       if (!p.cmds) {

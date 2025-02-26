@@ -14,7 +14,10 @@ import { pino } from 'pino';
 import { Handler } from "./handler.js";
 
 /** 
- * @param {{sessionDir: string, pluginDir: string}} options - sessionDir: directory 
+ * @param {Object} options 
+ * @param {string} options.sessionDir - directory to store session files
+ * @param {string} options.pluginDir - directory to load plugins from
+ * @param {string} options.dataDir - directory to store data files
  */
 async function clientStart(options) {
   const sessionDir = options?.sessionDir ?? 'session';
@@ -25,7 +28,7 @@ async function clientStart(options) {
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
-  const handler = new Handler(pluginDir)
+  const handler = new Handler(options);
 
   const sock = makeWASocket({
     printQRInTerminal: true,
@@ -55,7 +58,13 @@ async function clientStart(options) {
   return sock;
 }
 
-clientStart().catch(err => {
+const clientOptions = {
+  sessionDir: './session',
+  pluginDir: './plugins',
+  dataDir: './data'
+}
+
+clientStart(clientOptions).catch(err => {
   console.error('Error in client:', err);
 });
 

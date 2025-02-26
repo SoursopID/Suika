@@ -11,27 +11,43 @@
 
 import { genHEXID } from "./utils.js";
 
+const skipMessageTypes = [
+  'messageContextInfo',
+]
+
 /**
  * Extracts text content and context info from a message
  * @param {Partial<import('baileys').WAMessage>} m - Message object
- * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null}} Extracted text and context
+ * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null, type: string}} Extracted text and context
  */
 function extactTextContext(m) {
   let resp = {
     text: "",
-    contextInfo: null
+    contextInfo: null,
+    type: null
   }
 
   if (typeof m !== 'object' || m === null) return resp;
 
   for (let key in m) {
+    if (key === 'protocolMessage') {
+      if (m[key]?.editedMessage) {
+        resp = extactTextContext(m[key].editedMessage);
+        break;
+      }
+    }
 
     if (m[key] === null || m[key] === undefined) { continue; }
     if (key === 'conversation') {
-      if (m[key].length > 0) { resp.text = m[key]; continue; }
+      if (m[key].length > 0) {
+        resp.text = m[key];
+        if (!skipMessageTypes.includes(key)) resp.type = key;
+        continue;
+      }
     }
 
     if (typeof m[key] === 'object') {
+      if (!skipMessageTypes.includes(key)) resp.type = key;
       if (m[key].caption?.length > 0) { resp.text = m[key].caption; }
       if (m[key].text?.length > 0) { resp.text = m[key].text; }
       if (m[key].contextInfo) { resp.contextInfo = m[key].contextInfo; }
@@ -49,6 +65,7 @@ function extactTextContext(m) {
  * @property {string} [type] - Update type
  * @property {import('baileys').WAMessageKey} [key] - Message key
  * @property {import('baileys').WAMessage} [message] - Message
+ * @property {string} [messageType] - Message type
  * @property {number} [timestamp] - Message timestamp
  * @property {string} [id] - Message ID
  * @property {string} [chat] - Chat ID
@@ -105,6 +122,7 @@ export class Ctx {
     this.pushName = this.update?.pushName;
 
     const ext = extactTextContext(m)
+    this.messageType = ext.type;
 
     this.text = ext.text;
     this.contextInfo = ext.contextInfo;
@@ -118,20 +136,10 @@ export class Ctx {
     this.stanzaId = this.contextInfo?.stanzaId;
     this.participant = this.contextInfo?.participant;
     this.expiration = this.contextInfo?.expiration;
-  }
 
-  /**
-   * Reply to the current message
-   * @param {Partial<import('baileys').WAMessage>} m - Message object to send as reply
-   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
-   */
-  reply(m) {
-    if (this.expiration) {
-      if (m.contextInfo === undefined || m.contextInfo === null) m.contextInfo = {};
-      m.contextInfo.expiration = this.expiration;
+    if (this.expiration > 0) {
+      this.handler.expirations.set(this.chat, this.expiration);
     }
-
-    return this.send(this.chat, m);
   }
 
   /** 
@@ -143,4 +151,41 @@ export class Ctx {
   send(to, m) {
     return this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
   }
+
+  /**
+   * Reply to the current message
+   * @param {Partial<import('baileys').WAMessage>} m - Message object to send as reply
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   */
+  reply(m) {
+
+    const exp = this.expiration ?? this.handler.expirations.get(this.chat);
+    if (exp) {
+      if (m.contextInfo === undefined || m.contextInfo === null) m.contextInfo = {};
+      m.contextInfo.expiration = exp;
+    }
+
+    return this.send(this.chat, m);
+  }
+
+  /**
+   * React to a message with the given emoji
+   * @param {string} to - 
+   * @param {string} emo - Emoji to send 
+   * @param {import('baileys').WAMessageKey} key - Message key
+   */
+  reactTo(to, emo, key) {
+    return this.send(to, { react: { text: emo, key: key } })
+  }
+
+  /**
+   * React to the current message with the given emoji
+   * @param {string} emo - Emoji to send 
+   */
+  react(emo) {
+    return this.reactTo(this.chat, emo, this.key)
+  }
+
+
+
 }
