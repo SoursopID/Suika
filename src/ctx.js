@@ -59,29 +59,34 @@ function extactTextContext(m) {
 
 /**
  * @typedef {Object} Ctx - Context
- * @property {import('./handler.js').Handler} [handler] - Handler instance
- * @property {import('baileys').WASocket} [sock] - Baileys socket client
- * @property {import('baileys').WAMessage} [update] - Message update
- * @property {string} [type] - Update type
- * @property {import('baileys').WAMessageKey} [key] - Message key
- * @property {import('baileys').WAMessage} [message] - Message
- * @property {string} [messageType] - Message type
- * @property {number} [timestamp] - Message timestamp
- * @property {string} [id] - Message ID
- * @property {string} [chat] - Chat ID
- * @property {string} [sender] - Sender ID
- * @property {boolean} [fromMe] - From me
- * @property {string} [pushName] - Push name
- * @property {string} [text] - Message text
- * @property {string} [pattern] - Command pattern
- * @property {string} [args] - Command arguments
- * @property {import('baileys').WAContextInfo} [contextInfo] - Context info
- * @property {import('baileys').WAMessage} [quotedMessage] - Quoted message
- * @property {string} [quotedText] - Quoted message text
- * @property {string} [stanzaId] - Stanza ID
- * @property {string} [participant] - Participant ID
- * @property {number} [expiration] - Expiration time
- * @property {Array<string>} [mentions] - Mentioned participants
+ * @property {import('./handler.js').Handler} handler - Handler instance
+ * @property {import('baileys').WASocket} sock - Baileys socket client
+ * @property {import('baileys').WAMessage} update - Message update
+ * @property {string} type - Update type
+ * @property {import('baileys').WAMessageKey} key - Message key
+ * @property {import('baileys').WAMessage} message - Message
+ * @property {string} messageType - Message type
+ * @property {number} timestamp - Message timestamp
+ * @property {string} id - Message ID
+ * @property {string} chat - Chat ID
+ * @property {string} sender - Sender ID
+ * @property {boolean} fromMe - From me
+ * @property {string} pushName - Push name
+ * @property {string} text - Message text
+ * @property {string} pattern - Command pattern
+ * @property {string} args - Command arguments
+ * @property {import('baileys').WAContextInfo} contextInfo - Context info
+ * @property {import('baileys').WAMessage} quotedMessage - Quoted message
+ * @property {string} quotedText - Quoted message text
+ * @property {string} stanzaId - Stanza ID
+ * @property {string} participant - Participant ID
+ * @property {number} expiration - Expiration time
+ * @property {Array<string>} mentions - Mentioned participants
+ */
+
+/**
+ * Context class
+ * @class
  */
 export class Ctx {
   /**
@@ -173,6 +178,7 @@ export class Ctx {
    * @param {string} to - 
    * @param {string} emo - Emoji to send 
    * @param {import('baileys').WAMessageKey} key - Message key
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
    */
   reactTo(to, emo, key) {
     return this.send(to, { react: { text: emo, key: key } })
@@ -181,11 +187,10 @@ export class Ctx {
   /**
    * React to the current message with the given emoji
    * @param {string} emo - Emoji to send 
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
    */
   react(emo) {
     return this.reactTo(this.chat, emo, this.key)
   }
-
-
 
 }

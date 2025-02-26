@@ -23,18 +23,18 @@ export const AllowOne = 'one';
 
 /**
  * @typedef {Object} Plugin - Plugin configuration
- * @property {import('baileys').WASocket} [sock] - Baileys socket client
- * @property {import('./handler.js').Handler} [handler] - Plugin handler
- * @property {string} [id] - Unique identifier (auto-generated if not provided)
- * @property {string} [desc] - Plugin description
- * @property {string} [usage] - Usage instructions
- * @property {string[]} [tags] - Category tags (defaults to [])
- * @property {string[]} [cmds] - Command triggers (converted to lowercase)
- * @property {boolean} [disabled] - Whether plugin is disabled (defaults to false)
- * @property {number} [timeout] - Command timeout in ms (defaults to 0)
- * @property {boolean} [noprefix] - Skip command prefix (defaults to false)
- * @property {CheckRule} [checkRule] - Check rule type (defaults to MustAll)
- * @property {Array<(ctx: import('./ctx.js').Ctx) => boolean>} [checks] - Validation functions
+ * @property {import('baileys').WASocket} sock - Baileys socket client
+ * @property {import('./handler.js').Handler} handler - Plugin handler
+ * @property {string} id - Unique identifier (auto-generated if not provided)
+ * @property {string} desc - Plugin description
+ * @property {string} usage - Usage instructions
+ * @property {string[]} tags - Category tags (defaults to [])
+ * @property {string[]} cmds - Command triggers (converted to lowercase)
+ * @property {boolean} disabled - Whether plugin is disabled (defaults to false)
+ * @property {number} timeout - Command timeout in ms (defaults to 0)
+ * @property {boolean} noprefix - Skip command prefix (defaults to false)
+ * @property {CheckRule} checkRule - Check rule type (defaults to MustAll)
+ * @property {Array<(ctx: import('./ctx.js').Ctx) => boolean>} checks - Validation functions
  * @property {(ctx: import('./ctx.js').Ctx) => void} exec - Command execution function
  */
 

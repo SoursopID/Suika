@@ -13,13 +13,14 @@ import fs from 'fs';
 
 /**
  * @typedef {Object} Config
- * @property {string} [jsonName] - The name of the JSON file.
- * @property {Map<string, any>} [data] - The data of the config.
- * @property {boolean} [autosave] - If true, the config will be saved automatically when changed.
+ * @property {string} jsonName - The name of the JSON file.
+ * @property {Map<string, any>} data - The data of the config.
+ * @property {boolean} autosave - If true, the config will be saved automatically when changed.
  */
 
 /**
- * @class
+ * The config class.
+ * @class 
  */
 export class Config {
   /**
@@ -42,7 +43,11 @@ export class Config {
     this.load(this.jsonName);
   }
 
-  /** @param {string} filename */
+  /**
+   * Load the config from a JSON file.
+   * @async
+   * @param {string} filename 
+   */
   async load(filename) {
     if (!filename) filename = this.jsonName;
     try {
@@ -58,7 +63,11 @@ export class Config {
     }
   }
 
-  /** @param {string} filename */
+  /**
+   * Save the config to a JSON file.
+   * @async
+   * @param {string} filename 
+   */
   async save(filename) {
     if (!filename) filename = this.jsonName;
     try {
@@ -71,12 +80,17 @@ export class Config {
 
   }
 
-  /** @param {string} key */
+  /** 
+   * Get a value from the config.
+   * @param {string} key 
+   * @returns {any}
+   */
   get(key) {
     return this.data.get(key);
   }
 
-  /** 
+  /**
+   * Set a value to the config.
    * @param {string} key 
    * @param {any} value 
    */
@@ -85,17 +99,27 @@ export class Config {
     if (this.autosave) this.save();
   }
 
-  /** @param {string} key */
+  /**
+   * Delete a value from the config.
+   * @param {string} key 
+   */
   delete(key) {
     this.data.delete(key);
     if (this.autosave) this.save();
   }
 
-  /** @param {string} key */
+  /**
+   * Check if a key exists in the config.
+   * @param {string} key
+   * @returns {boolean}
+   */
   has(key) {
     return this.data.has(key);
   }
 
+  /**
+   * Clear the config.
+   */
   clear() {
     this.data.clear();
     if (this.autosave) this.save();

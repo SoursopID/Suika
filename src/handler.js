@@ -24,16 +24,21 @@ export const DEFAULT_PREFIX = "/.";
 
 /**
  * @typedef {Object} Handler - Plugin handler
- * @property {import('baileys').WASocket} [sock] - Baileys socket client
- * @property {Map<string, import('./plugin.js').Plugin>} [plugins] - Map of plugin ID to Plugin instance
- * @property {Array<string>} [listeners] - Array of listener plugin IDs
- * @property {Map<string, string>} [commands] - Map of command pattern to plugin ID
- * @property {string} [pluginDir] - Plugin directory path
- * @property {string} [prefix] - Command prefix
- * @property {Map<string, Function>} [handlers] - Map of event name to handler function
- * @property {Map<string, import('./plugin.js').Plugin>} [afterSend] - After-send handlers
- * @property {Promise<void>} [ready] - Plugin loading completion promise
- * @property {Map<string, number>} [expirations] - Map of plugin ID to expiration timestamp
+ * @property {import('baileys').WASocket} sock - Baileys socket client
+ * @property {Map<string, import('./plugin.js').Plugin>} plugins - Map of plugin ID to Plugin instance
+ * @property {Array<string>} listeners - Array of listener plugin IDs
+ * @property {Map<string, string>} commands - Map of command pattern to plugin ID
+ * @property {string} pluginDir - Plugin directory path
+ * @property {string} prefix - Command prefix
+ * @property {Map<string, Function>} handlers - Map of event name to handler function
+ * @property {Map<string, import('./plugin.js').Plugin>} afterSend - After-send handlers
+ * @property {Promise<void>} ready - Plugin loading completion promise
+ * @property {Map<string, number>} expirations - Map of plugin ID to expiration timestamp
+ */
+
+/**
+ * Handler class
+ * @class
  */
 export class Handler {
   /**
@@ -68,6 +73,7 @@ export class Handler {
 
   /**
    * Returns the number of registered listeners
+   * @async
    * @returns {Promise<number>} Number of listeners
    */
   async countListeners() {
@@ -77,6 +83,7 @@ export class Handler {
 
   /**
    * Returns the number of loaded plugins
+   * @async
    * @returns {Promise<number>} Number of plugins
    */
   async countPlugins() {
@@ -86,6 +93,7 @@ export class Handler {
 
   /**
    * Returns the number of registered commands
+   * @async
    * @returns {Promise<number>} Number of commands
    */
   async countCommands() {
@@ -176,6 +184,7 @@ export class Handler {
 
   /**
    * Loads plugins from a directory
+   * @async
    * @param {string} dir - Plugin directory path
    * @returns {Promise<void>}
    */
