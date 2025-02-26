@@ -12,6 +12,7 @@
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
   cmds: [">"],
+  timeout: 15,
   noprefix: true,
   checks: [
     (m) => { return m.fromMe },

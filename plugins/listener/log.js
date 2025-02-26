@@ -22,16 +22,20 @@ export const on = {
 
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: (m) => {
-    let logs = [m.timestamp];
+    let logs = [m.timestamp, m.type];
+
     let elapse = 0;
     if (m.timestamp) {
       elapse = Date.now() - m.timestamp;
     }
-
     logs.push(formatElapse(elapse))
+
+    if (m.messageType) logs.push(m.messageType);
+
     logs.push(m.quotedMessage ? `${shortTo(m.id, 8)} => ${shortTo(m.stanzaId, 8)}` : shortTo(m.id, 8));
 
-    m.pushName != '' ? logs.push(m.pushName) : logs.push(m.sender)
+    let sender = m.pushName ?? m.sender;
+    logs.push(sender);
 
     let snippet = "";
     if (m.args) {
