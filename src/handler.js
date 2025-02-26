@@ -183,13 +183,21 @@ export class Handler {
           }
 
           const plugin = await import(path);
-          if (plugin.on) {
-            this.on(plugin.on);
+
+          if (plugin.on) this.on(plugin.on)
+          if (plugin.ons) {
+            for (const p of plugin.ons) {
+              this.on(p);
+            }
           }
 
-          if (plugin.after) {
-            this.after(plugin.after);
+          if (plugin.after) this.after(plugin.after)
+          if (plugin.afters) {
+            for (const p of plugin.afters) {
+              this.on(p);
+            }
           }
+
 
           console.log('success', path);
         } catch (e) {
