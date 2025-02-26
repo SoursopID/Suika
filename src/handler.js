@@ -14,6 +14,8 @@ import { Ctx } from "./ctx.js";
 import { MESSAGES_UPSERT } from "./event.js";
 import { Plugin } from "./plugin.js";
 import { readdirSync, statSync } from 'fs';
+import { platform } from "os";
+import { pathToFileURL } from "url";
 
 
 
@@ -168,7 +170,7 @@ export class Handler {
   async pluginReload(dir) {
     const files = readdirSync(dir);
     for (const file of files) {
-      const path = `${dir}/${file}`.replaceAll('//', '/');
+      let path = `${dir}/${file}`.replaceAll('//', '/');
 
       if (statSync(path)?.isDirectory()) {
         await this.pluginReload(path);
@@ -176,6 +178,10 @@ export class Handler {
 
       if (file.endsWith('.js')) {
         try {
+          if (platform() === 'win32') {
+            path = pathToFileURL(path).href;
+          }
+
           const plugin = await import(path);
           if (plugin.on) {
             this.on(plugin.on);
@@ -187,7 +193,7 @@ export class Handler {
 
           console.log('success', path);
         } catch (e) {
-          console.log('error', e.message);
+          console.log('error', path, e);
         }
       }
     }
@@ -208,7 +214,7 @@ function handle_upsert(handler, sock, upsert) {
     if (!upsert?.messages) return;
 
     for (const message of upsert.messages) {
-      const ctx = new Ctx({ handler: handler, sock: sock, update: message });
+      const ctx = new Ctx({ handler: handler, sock: sock, update: message, type: upsert.type });
       if (upsert?.type === 'notify') {
         // looping through listeners
         for (const pid of handler.listeners) {

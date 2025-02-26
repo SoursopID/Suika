@@ -46,6 +46,7 @@ function extactTextContext(m) {
  * @property {import('./handler.js').Handler} [handler] - Handler instance
  * @property {import('baileys').WASocket} [sock] - Baileys socket client
  * @property {import('baileys').WAMessage} [update] - Message update
+ * @property {string} [type] - Update type
  * @property {import('baileys').WAMessageKey} [key] - Message key
  * @property {import('baileys').WAMessage} [message] - Message
  * @property {number} [timestamp] - Message timestamp
@@ -71,6 +72,7 @@ export class Ctx {
    * @param {import('./handler.js').Handler} options.handler - Handler instance
    * @param {import('baileys').WASocket} options.sock - Baileys socket client 
    * @param {import('baileys').WAMessage} options.update - Message update
+   * @param {string} options.type - Update type
    */
   constructor(options) {
     /** @type {import('./handler.js').Handler} */
@@ -84,6 +86,9 @@ export class Ctx {
 
     /** @type {import('baileys').WAMessageKey} */
     this.key = options.update?.key;
+
+    /** @type {string} */
+    this.type = options.type;
 
     this.parse();
   }
