@@ -14,7 +14,7 @@ import { formatElapse } from "../../src/utils.js";
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
   cmds: ["ping", "p"],
-  // timeout: 120,
+  timeout: 120,
   checks: [
     (m) => { return m.fromMe; }
   ],

@@ -100,7 +100,7 @@ export class Plugin {
     }
 
     if (this.timeout > 0) {
-      const diff = now - (ctx.timestamp * 1000);
+      const diff = new Date().getTime() - (ctx.timestamp * 1000);
 
       if (diff > this.timeout) {
         return false;
