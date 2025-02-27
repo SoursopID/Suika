@@ -9,7 +9,7 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { genHEXID } from './utils.js';
+import { genHEXID, crc32s } from './utils.js';
 
 /**
  * @typedef {string} CheckRule
@@ -56,7 +56,8 @@ export class Plugin {
     this.handler = options.handler;
 
     /** @type {string} */
-    this.id = options.id ?? genHEXID(6);
+    this.id = Array.isArray(options?.cmds) && options?.cmds?.length > 0 ?
+      crc32s(options?.cmds?.join(' ')) : genHEXID(6);
 
     /** @type {string} */
     this.desc = options.desc;
@@ -68,7 +69,7 @@ export class Plugin {
     this.tags = options.tags ?? [];
 
     /** @type {string[]} */
-    this.cmds = options.cmds?.map(cmd => cmd.toLowerCase());
+    this.cmds = options.cmds?.map((c) => c.toLowerCase());
 
     /** @type {boolean} */
     this.disabled = options.disabled ?? false;
@@ -87,30 +88,32 @@ export class Plugin {
 
     /** @type {Function} */
     this.exec = options.exec;
+
   }
 
   /**
    * Check if the plugin can execute for given context
    * @param {import('./ctx.js').Ctx} ctx - Message context
-   * @returns {Promise<boolean>} True if all checks pass according to checkRule
+   * @returns {boolean} True if all checks pass according to checkRule
    */
-  async check(ctx) {
+  check(ctx) {
     if (this.disabled == true) {
       return false;
     }
 
     if (this.timeout > 0) {
       const diff = new Date().getTime() - ctx.timestamp;
-      if (diff > this.timeout) {
+      if (diff > (this.timeout * 1000)) {
         return false;
       }
     }
 
     if (this.checks) {
       let checkeds = [];
-      for (const check of this.checks) {
-        checkeds.push(await check(ctx));
+      for (const ch of this.checks) {
+        checkeds.push(ch(ctx));
       }
+
       if (this.checkRule === MustAll) {
         return checkeds.every(Boolean);
       } else if (this.checkRule === AllowOne) {
@@ -118,6 +121,6 @@ export class Plugin {
       }
     }
 
-    return true;
+    return false;
   }
 }
