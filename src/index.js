@@ -43,7 +43,7 @@ async function clientStart(options) {
     if (connection === 'close') {
       const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
       if (shouldReconnect) {
-        clientStart();
+        clientStart(options);
       }
     }
   });
