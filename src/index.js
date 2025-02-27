@@ -12,6 +12,16 @@
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { pino } from 'pino';
 import { Handler } from "./handler.js";
+import { config } from 'dotenv';
+import { existsSync } from 'fs';
+import path from 'path';
+
+// Load environment variables from .env file if it exists
+const envPath = path.resolve(process.cwd(), '.env');
+if (existsSync(envPath)) {
+  console.log(`Loading configuration from ${envPath}`);
+  config();
+}
 
 /**
  * @typedef {Object} ClientOptions
@@ -29,9 +39,11 @@ import { Handler } from "./handler.js";
 async function clientStart(options) {
   const sessionDir = options?.sessionDir ?? 'session';
   const pluginDir = options?.pluginDir ?? './plugins';
+  const dataDir = options?.dataDir ?? './data';
 
   console.log(`sessionDir:`, sessionDir);
   console.log(`pluginDir:`, pluginDir);
+  console.log(`dataDir:`, dataDir);
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
@@ -66,16 +78,23 @@ async function clientStart(options) {
 }
 
 /**
- * Default client options
- * @type {ClientOptions}
+ * Get options from environment variables with fallbacks
+ * 
+ * @returns {ClientOptions} Client options from environment or defaults
  */
-const clientOptions = {
-  sessionDir: './session',
-  pluginDir: './plugins',
-  dataDir: './data'
+function getOptionsFromEnv() {
+  return {
+    sessionDir: process.env.SUIKA_SESSION_DIR ?? './session',
+    pluginDir: process.env.SUIKA_PLUGIN_DIR ?? './plugins',
+    dataDir: process.env.SUIKA_DATA_DIR ?? './data',
+    // Add any other environment-configurable options here
+  };
 }
 
-// Start the client with default options
+// Get options from environment variables with fallbacks to defaults
+const clientOptions = getOptionsFromEnv();
+
+// Start the client with the configured options
 clientStart(clientOptions).catch(err => {
   console.error('Error in client:', err);
 });
