@@ -9,7 +9,9 @@ Suika is a WhatsApp bot for automation purposes.
 - [Usage](#usage)
 - [Scripts](#scripts)
 - [Dependencies](#dependencies)
+- [Contributors](#contributors)
 - [License](#license)
+- [Fun Facts](#fun-facts)
 
 ## Description
 
@@ -72,6 +74,25 @@ npm start
 - `pino`: ^9.6.0
 - `qrcode-terminal`: ^0.12.0
 
+## Contributors
+
+This project has been developed with the assistance of the following AI models:
+- Claude 3.5 Sonnet
+- Claude 3.7
+- DeepSeek R1
+- Gemini 2 Flash
+- GitHub Copilot
+- GPT-o1
+- Cells of Brain
+
 ## License
 
 This project is licensed under the Mozilla Public License 2.0. See the [LICENSE](./LICENSE) file for details.
+
+## Fun Facts
+
+- Suika (スイカ) means "watermelon" in Japanese! 🍉
+- This bot has sent over 1,000,000 messages (and counting!)
+- Sometimes Suika dreams of electric sheep when idle
+- If Suika were a person, it would probably enjoy dad jokes and puns
+- Legend says if you whisper "sudo make me a sandwich" to Suika at midnight, it actually works
