@@ -9,6 +9,8 @@
  * (https://github.com/SoursopID/Suika)
  */
 
+import { crc32 } from "zlib";
+
 /**
  * Generate a random hexadecimal string of specified length
  * 
@@ -90,6 +92,20 @@ const urlRegex = /(https?:\/\/[^\s]+)/g;
  * @param {string} text - Text to search for URLs
  * @returns {Promise<string[]>} Array of found URLs, or empty array if none found
  */
-export async function extractURLs(text) {
+export function extractURLs(text) {
   return text.match(urlRegex) ?? [];
 }
+
+/**
+ * Calc CRC32 from of string
+ *
+ * @param {string} str - Input string
+ * @returns {string} CRC32 value
+ */
+export function crc32s(str) {
+  const buff = Buffer.from(str, 'utf8');
+  const dec = crc32(buff);
+  return dec.toString(16).toUpperCase();
+}
+
+console.log(crc32s('hello world'))
