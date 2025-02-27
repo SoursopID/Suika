@@ -11,7 +11,7 @@
 
 import path from "path";
 import { Ctx } from "./ctx.js";
-import { MESSAGES_UPSERT } from "./event.js";
+import { MESSAGES_UPSERT, GROUPS_UPSERT } from "./event.js";
 import { Plugin } from "./plugin.js";
 import { mkdirSync, readdirSync, statSync } from 'fs';
 import { platform } from "os";
@@ -78,7 +78,8 @@ export class Handler {
     this.groupMetadata = new Config({ jsonName: path.join(options.dataDir, 'group_metadata.json'), autosave: true });
 
 
-    this.handlers.set(MESSAGES_UPSERT, handle_upsert);
+    this.handlers.set(MESSAGES_UPSERT, handle_message_upsert);
+    this.handlers.set(GROUPS_UPSERT, handle_groups_upsert);
 
     this.ready = this.pluginReload(this.pluginDir);
   }
@@ -268,7 +269,7 @@ export class Handler {
  * @returns {Promise<void>}
  * @private
  */
-async function handle_upsert(handler, sock, upsert) {
+async function handle_message_upsert(handler, sock, upsert) {
   try {
     if (!upsert?.messages) return;
 
@@ -317,3 +318,32 @@ async function handle_upsert(handler, sock, upsert) {
     console.log('Message:', JSON.stringify(upsert));
   }
 }
+
+/**
+ * Handles group update events from WhatsApp
+ * 
+ * @param {Handler} handler - Handler instance
+ * @param {import('baileys').WASocket} sock - Baileys socket client
+ * @param {import('baileys').GroupMetadata[]} updates - Group update event
+ * @returns {Promise<void>}
+ * @private
+ */
+async function handle_groups_upsert(handler, sock, updates) {
+  try {
+    if (!updates) return;
+    
+    // Process each group update
+    for (const group of updates) {
+      // Store the updated group metadata in the cache
+      if (group.id) {
+        handler.groupMetadata.set(group.id, group);
+        console.log(`Updated group metadata for: ${group.id}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error handling group update:', err);
+    console.log('Update:', JSON.stringify(update));
+  }
+}
+
+
