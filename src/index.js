@@ -15,6 +15,20 @@ import { Handler } from "./handler.js";
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import path from 'path';
+import readline from "node:readline";
+
+
+const question = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+
+/** @type {import('node:readline').Interface} */
+const ask = (text) => new Promise((resolve) => question.question(text, resolve));
+
+/** @type {import('node:timers').Timer} */
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Load environment variables from .env file if it exists
 const envPath = path.resolve(process.cwd(), '.env');
@@ -28,6 +42,7 @@ if (existsSync(envPath)) {
  * @property {string} [sessionDir='session'] - Directory to store session files
  * @property {string} [pluginDir='./plugins'] - Directory to load plugins from
  * @property {string} [dataDir='./data'] - Directory to store data files
+ * @property {string} [method='otp'] - WhatsApp phone number to connect to
  */
 
 /** 
@@ -40,6 +55,7 @@ async function clientStart(options) {
   const sessionDir = options?.sessionDir ?? 'session';
   const pluginDir = options?.pluginDir ?? './plugins';
   const dataDir = options?.dataDir ?? './data';
+  const method = options?.method ?? 'qr';
 
   console.log(`sessionDir:`, sessionDir);
   console.log(`pluginDir:`, pluginDir);
@@ -49,12 +65,30 @@ async function clientStart(options) {
 
   const handler = new Handler(options);
 
-  const sock = makeWASocket({
-    printQRInTerminal: true,
+  const socketOptions = {
+    printQRInTerminal: method === 'qr',
     auth: state,
-    browser: ['macOS', 'Chrome', '10.15.6'],
+    browser: method === 'qr' ? ['macOS', 'Safari', '18.3'] : ['macOS', 'Chrome', '134.0.6998.31'],
     logger: pino({ level: 'warn' }),
-  });
+  };
+  const sock = makeWASocket(socketOptions);
+  await handler.attach(sock);
+
+  if (method !== 'qr' && !state.creds.registered) {
+    await delay(1000);
+
+    let phone
+    while (!phone) {
+      phone = await ask('Enter phone number: ');
+      phone = phone?.replace(/[^+0-9]/g, '');
+      phone = phone?.trim();
+
+      if (!phone) console.log('Phone number cannot be empty!');
+    }
+
+    const otp = await sock.requestPairingCode(phone);
+    if (otp) console.log(` Enter this OTP on your WhatsApp (${phone}) : ${otp}`);
+  }
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
@@ -64,12 +98,13 @@ async function clientStart(options) {
       if (shouldReconnect) {
         clientStart(options);
       }
+    } else if (connection === 'open') {
+      console.log('WhatsApp connected!');
     }
   });
 
   sock.ev.on('creds.update', saveCreds);
 
-  await handler.attach(sock);
 
   console.log(`${await handler.countListeners()} listeners attached.`);
   console.log(`${await handler.countCommands()} commands loaded.`);
@@ -87,6 +122,7 @@ function getOptionsFromEnv() {
     sessionDir: process.env.SUIKA_SESSION_DIR ?? './session',
     pluginDir: process.env.SUIKA_PLUGIN_DIR ?? './plugins',
     dataDir: process.env.SUIKA_DATA_DIR ?? './data',
+    method: process.env.SUIKA_METHOD ?? 'otp',
     // Add any other environment-configurable options here
   };
 }
