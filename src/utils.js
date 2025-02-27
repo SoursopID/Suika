@@ -96,6 +96,20 @@ export function extractURLs(text) {
   return text.match(urlRegex) ?? [];
 }
 
+
+const makeCRCTable = () => {
+  let c;
+  let crcTable = [];
+  for (let n = 0; n < 256; n++) {
+    c = n;
+    for (let k = 0; k < 8; k++) {
+      c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+    }
+    crcTable[n] = c;
+  }
+  return crcTable;
+}
+
 /**
  * Calc CRC32 from of string
  *
@@ -103,9 +117,13 @@ export function extractURLs(text) {
  * @returns {string} CRC32 value
  */
 export function crc32s(str) {
-  const buff = Buffer.from(str, 'utf8');
-  const dec = crc32(buff);
-  return dec.toString(16).toUpperCase();
-}
+  const crcTable = makeCRCTable()
+  let crc = 0 ^ (-1);
 
-console.log(crc32s('hello world'))
+  for (let i = 0; i < str.length; i++) {
+    crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+  }
+
+  const dec = (crc ^ (-1)) >>> 0;
+  return dec.toString('16').toUpperCase();
+};
