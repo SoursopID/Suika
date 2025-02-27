@@ -13,8 +13,7 @@ import fs from 'fs';
 
 /**
  * @typedef {Object} ConfigOptions
- * @property {string} [jsonName] - The name of the JSON file to use for storage.
- * @property {string} [unique] - A unique identifier used to generate the default JSON filename.
+ * @property {string} jsonName - The required name of the JSON file to use for storage.
  * @property {boolean} [autosave=false] - If true, the config will be saved automatically when changed.
  */
 
@@ -36,17 +35,31 @@ export class Config {
   /**
    * Creates a new Config instance.
    * 
-   * @param {ConfigOptions} [options] - Configuration options
-   * @param {string} [options.jsonName] - The name of the JSON file to use
-   * @param {string} [options.unique] - A unique identifier to use in the default filename
+   * @param {ConfigOptions} options - Configuration options
+   * @param {string} options.jsonName - Required name of the JSON file to use
    * @param {boolean} [options.autosave=false] - Whether to automatically save changes
    */
   constructor(options) {
-    /** 
+    if (!options || !options.jsonName) {
+      throw new Error('Config requires a jsonName parameter');
+    }
+
+    /**
      * The name of the JSON file where config data is stored
      * @type {string} 
      */
-    this.jsonName = options?.jsonName ?? `json_${options?.unique}.json`;
+    this.jsonName = options.jsonName;
+    
+    // Ensure the jsonName has the proper extension
+    if (!this.jsonName.endsWith('.json')) {
+      this.jsonName += '.json';
+    }
+    
+    // If the path includes directories, ensure they exist
+    const dir = this.jsonName.substring(0, this.jsonName.lastIndexOf('/'));
+    if (dir && dir !== '' && !fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
     /** 
      * The configuration data object
@@ -58,7 +71,7 @@ export class Config {
      * Whether to automatically save after changes
      * @type {boolean} 
      */
-    this.autosave = options?.autosave ?? false;
+    this.autosave = options.autosave ?? false;
 
     /** 
      * Whether the config has unsaved changes
