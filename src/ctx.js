@@ -118,6 +118,78 @@ export class Ctx {
     this.type = options.type;
 
     this.parse();
+
+    this.getOrderDetails = this.sock?.upsertMessage
+    this.getCatalog = this.sock?.upsertMessage
+    this.getCollections = this.sock?.upsertMessage
+    this.productCreate = this.sock?.upsertMessage
+    this.productDelete = this.sock?.upsertMessage
+    this.productUpdate = this.sock?.upsertMessage
+    this.sendMessageAck = this.sock?.upsertMessage
+    this.sendRetryRequest = this.sock?.upsertMessage
+    this.rejectCall = this.sock?.upsertMessage
+    this.fetchMessageHistory = this.sock?.upsertMessage
+    this.requestPlaceholderResend = this.sock?.upsertMessage
+    this.getPrivacyTokens = this.sock?.upsertMessage
+    this.assertSessions = this.sock?.upsertMessage
+    this.relayMessage = this.sock?.upsertMessage
+    this.sendReceipt = this.sock?.upsertMessage
+    this.sendReceipts = this.sock?.upsertMessage
+    this.readMessages = this.sock?.upsertMessage
+    this.refreshMediaConn = this.sock?.upsertMessage
+    this.waUploadToServer = this.sock?.upsertMessage
+    this.fetchPrivacySettings = this.sock?.upsertMessage
+    this.sendMessage = this.sock?.sendMessage;
+    this.groupMetadata = this.sock?.groupMetadata;
+    this.groupCreate = this.sock?.groupCreate;
+    this.groupLeave = this.sock?.groupLeave;
+    this.groupUpdateSubject = this.sock?.groupUpdateSubject
+    this.groupRequestParticipantsList = this.sock?.groupRequestParticipantsList
+    this.groupUpdateDescription = this.sock?.groupUpdateDescription
+    this.groupInviteCode = this.sock?.groupInviteCode
+    this.groupRevokeInvite = this.sock?.groupRevokeInvite
+    this.groupAcceptInvite = this.sock?.groupAcceptInvite
+    this.groupRevokeInviteV4 = this.sock?.groupRevokeInviteV4
+    this.groupAcceptInviteV4 = this.sock?.groupAcceptInviteV4
+    this.groupGetInviteInfo = this.sock?.groupGetInviteInfo
+    this.groupToggleEphemeral = this.sock?.groupToggleEphemeral
+    this.groupSettingUpdate = this.sock?.groupSettingUpdate
+    this.groupMemberAddMode = this.sock?.groupMemberAddMode
+    this.groupJoinApprovalMode = this.sock?.groupJoinApprovalMode
+    this.groupFetchAllParticipating = this.sock?.groupFetchAllParticipating
+    this.upsertMessage = this.sock?.upsertMessage
+    this.appPatch = this.sock?.appPatch
+    this.sendPresenceUpdate = this.sock?.sendPresenceUpdate
+    this.presenceSubscribe = this.sock?.presenceSubscribe
+    this.profilePictureUrl = this.sock?.profilePictureUrl
+    this.onWhatsApp = this.sock?.onWhatsApp
+    this.fetchBlocklist = this.sock?.fetchBlocklist
+    this.fetchStatus = this.sock?.fetchStatus
+    this.fetchDisappearingDuration = this.sock?.fetchDisappearingDuration
+    this.updateProfilePicture = this.sock?.updateProfilePicture
+    this.removeProfilePicture = this.sock?.removeProfilePicture
+    this.updateProfileStatus = this.sock?.updateProfileStatus
+    this.updateProfileName = this.sock?.updateProfileName
+    this.updateBlockStatus = this.sock?.updateBlockStatus
+    this.updateCallPrivacy = this.sock?.updateCallPrivacy
+    this.updateLastSeenPrivacy = this.sock?.updateLastSeenPrivacy
+    this.updateOnlinePrivacy = this.sock?.updateOnlinePrivacy
+    this.updateProfilePicturePrivacy = this.sock?.updateProfilePicturePrivacy
+    this.updateStatusPrivacy = this.sock?.updateStatusPrivacy
+    this.updateReadReceiptsPrivacy = this.sock?.updateReadReceiptsPrivacy
+    this.updateGroupsAddPrivacy = this.sock?.updateGroupsAddPrivacy
+    this.updateDefaultDisappearingMode = this.sock?.updateDefaultDisappearingMode
+    this.getBusinessProfile = this.sock?.getBusinessProfile
+    this.resyncAppState = this.sock?.resyncAppState
+    this.chatModify = this.sock?.chatModify
+    this.cleanDirtyBits = this.sock?.cleanDirtyBits
+    this.addLabel = this.sock?.addLabel
+    this.addChatLabel = this.sock?.addChatLabel
+    this.removeChatLabel = this.sock?.removeChatLabel
+    this.addMessageLabel = this.sock?.addMessageLabel
+    this.removeMessageLabel = this.sock?.removeMessageLabel
+    this.star = this.sock?.star
+
   }
 
   /**
@@ -147,6 +219,7 @@ export class Ctx {
 
     this.pattern = this.text?.split(' ')[0];
     this.args = this.text?.slice(this.pattern.length)?.trim();
+    this.isCMD = this.handler.hasCMD(this.pattern);
 
     this.quotedMessage = this.contextInfo?.quotedMessage;
     const qext = extactTextContext(this.quotedMessage)
@@ -157,6 +230,11 @@ export class Ctx {
 
     if (this.expiration > 0) {
       this.handler.expirations.set(this.chat, this.expiration);
+    }
+
+    if (this.isCMD) {
+      const cmd = this.handler.getCMD(this.pattern);
+      this.isCMDAllowed = cmd?.check(this);
     }
   }
 
@@ -209,7 +287,7 @@ export class Ctx {
    * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
    */
   async send(to, m) {
-    return this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
+    return await this.sendMessage(to, m, { messageId: genHEXID(32) });
   }
 
   /**
@@ -250,5 +328,7 @@ export class Ctx {
   async react(emo) {
     return await this.reactTo(this.chat, emo, this.key)
   }
+
+
 
 }
