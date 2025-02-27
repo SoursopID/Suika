@@ -118,6 +118,28 @@ export class Handler {
   }
 
   /**
+   * Get command by pattern
+   *
+   * @param {string} p - Command pattern
+   * @returns {import('./plugin.js').Plugin} Plugin ID
+   */
+  getCMD(p) {
+    const cmdID = this.commands.get(p.toLowerCase());
+    return this.plugins.get(cmdID);
+  }
+
+  /**
+   * Check if a command pattern exists
+   *
+   * @param {string} p - Command pattern
+   * @returns {boolean} True if the pattern exists, false otherwise
+   */
+  hasCMD(p) {
+    return this.commands.has(p.toLowerCase());
+  }
+
+
+  /**
    * Registers an after-send plugin handler
    * 
    * @param {import('./plugin.js').Plugin} p - Plugin instance
@@ -150,6 +172,9 @@ export class Handler {
    */
   on(p) {
     const newp = new Plugin(p);
+    newp.handler = this;
+    newp.sock = this.sock;
+
     this.plugins.set(newp.id, newp);
     this.reloadPlugins();
   }
@@ -248,7 +273,6 @@ export class Handler {
             }
           }
 
-
           console.log('success', path);
         } catch (e) {
           console.log('error', path, e);
@@ -289,15 +313,12 @@ async function handle_message_upsert(handler, sock, upsert) {
         }
 
         // Process command plugins
-        if (handler.commands.has(ctx.pattern)) {
-          const id = handler.commands.get(ctx.pattern);
-          const plugin = handler.plugins.get(id);
-          if (plugin && await plugin.check(ctx)) {
-            try {
-              await plugin.exec(ctx);
-            } catch (error) {
-              console.error(`Error executing plugin ${id}:`, error);
-            }
+        const plugin = handler.getCMD(ctx.pattern);
+        if (plugin) {
+          try {
+            if (plugin.check(ctx)) await plugin.exec(ctx);
+          } catch (error) {
+            console.error(`Error executing plugin ${id}:`, error);
           }
         }
       } else if (upsert?.type === 'append') {
@@ -331,7 +352,7 @@ async function handle_message_upsert(handler, sock, upsert) {
 async function handle_groups_upsert(handler, sock, updates) {
   try {
     if (!updates) return;
-    
+
     // Process each group update
     for (const group of updates) {
       // Store the updated group metadata in the cache
@@ -342,7 +363,7 @@ async function handle_groups_upsert(handler, sock, updates) {
     }
   } catch (err) {
     console.error('Error handling group update:', err);
-    console.log('Update:', JSON.stringify(update));
+    console.log('Update:', JSON.stringify(updates));
   }
 }
 
