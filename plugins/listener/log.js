@@ -12,6 +12,8 @@
 
 import { AllowOne } from "../../src/plugin.js";
 import { formatElapse, shortTo } from "../../src/utils.js";
+import * as pen from "./pen.js";
+import * as emo from "../../src/emoji.js"
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
@@ -22,7 +24,12 @@ export const on = {
 
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: async (m) => {
-    let logs = [m.timestamp, m.type];
+    const time = new Date(m.timestamp).toLocaleTimeString('id-ID', { hour12: false });
+    let logs = [
+      pen.red(time),
+      m.type,
+      m.fromMe ? emo.BustInSilhouette : emo.BustsInSilhouette,
+    ];
 
     let elapse = 0;
     if (m.timestamp) {
@@ -30,26 +37,37 @@ export const on = {
     }
     logs.push(formatElapse(elapse))
 
-    if (m.messageType) logs.push(m.messageType);
+    if (m.messageType) logs.push(pen.green(m.messageType));
 
-    logs.push(m.quotedMessage ? `${shortTo(m.id, 8)} => ${shortTo(m.stanzaId, 8)}` : shortTo(m.id, 8));
+    logs.push(m.quotedMessage ? `${shortTo(m.id, 8)} ${pen.yellow('=>')} ${shortTo(m.stanzaId, 8)
+      }` : shortTo(m.id, 8));
 
     let sender = m.pushName ?? m.sender;
-    logs.push(sender);
+    logs.push(pen.magenta(sender));
+
+    const chat = await m.getChatName() ?? m.chat;
+
+    logs.push("on", pen.cyan(chat));
+    if (m.isCMD) {
+      if (m.isCMDAllowed) {
+        logs.push(pen.blue(m.pattern));
+      } else {
+        logs.push(pen.yellow(m.pattern));
+      }
+    } else {
+      logs.push(m.pattern);
+    }
 
     let snippet = "";
     if (m.args) {
       m.args?.split(' ')?.forEach(arg => {
         if (snippet.length > 30) return false;
         snippet += arg + " ";
-
       })
     };
     snippet = snippet.replaceAll("\n", " ");
 
-    const chat = await m.getChatName() ?? m.chat;
-
-    logs.push("on", chat, m.pattern, snippet);
+    logs.push(snippet);
 
     console.log(...logs);
   }
