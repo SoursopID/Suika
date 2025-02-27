@@ -18,9 +18,18 @@ import { platform } from "os";
 import { pathToFileURL } from "url";
 import { Config } from "./config.js";
 
-
-
+/**
+ * Default command prefix
+ * @type {string}
+ */
 export const DEFAULT_PREFIX = "/.";
+
+/**
+ * @typedef {Object} HandlerOptions
+ * @property {string} pluginDir - Path to plugin directory
+ * @property {string} dataDir - Path to data directory
+ * @property {string} [prefix] - Command prefix (defaults to DEFAULT_PREFIX)
+ */
 
 /**
  * @typedef {Object} Handler - Plugin handler
@@ -33,20 +42,21 @@ export const DEFAULT_PREFIX = "/.";
  * @property {Map<string, Function>} handlers - Map of event name to handler function
  * @property {Map<string, import('./plugin.js').Plugin>} afterSend - After-send handlers
  * @property {Promise<void>} ready - Plugin loading completion promise
- * @property {Map<string, number>} expirations - Map of plugin ID to expiration timestamp
+ * @property {import('./config.js').Config} expirations - Expiration times for messages
+ * @property {import('./config.js').Config} groupMetadata - Cached group metadata
  */
 
 /**
- * Handler class
- * @class
+ * Handler class for managing plugins and processing WhatsApp events
+ * 
+ * @class Handler
  */
 export class Handler {
   /**
    * Creates a new Handler instance
-   * @param {Object} options - Handler options
-   * @param {string} options.pluginDir - Plugin directory path
-   * @param {string} options.dataDir - Data directory path
-   * @param {string} options.prefix - Command prefix
+   * 
+   * @param {HandlerOptions} options - Handler configuration options
+   * @throws {Error} If required options are missing
    */
   constructor(options) {
     if (!options) throw new Error('Handler options are required');
@@ -65,6 +75,8 @@ export class Handler {
     this.commands = new Map();
     this.afterSend = new Map();
     this.expirations = new Config({ jsonName: path.join(options.dataDir, 'expirations.json'), autosave: true });
+    this.groupMetadata = new Config({ jsonName: path.join(options.dataDir, 'group_metadata.json'), autosave: true });
+
 
     this.handlers.set(MESSAGES_UPSERT, handle_upsert);
 
@@ -73,6 +85,7 @@ export class Handler {
 
   /**
    * Returns the number of registered listeners
+   * 
    * @async
    * @returns {Promise<number>} Number of listeners
    */
@@ -83,6 +96,7 @@ export class Handler {
 
   /**
    * Returns the number of loaded plugins
+   * 
    * @async
    * @returns {Promise<number>} Number of plugins
    */
@@ -93,6 +107,7 @@ export class Handler {
 
   /**
    * Returns the number of registered commands
+   * 
    * @async
    * @returns {Promise<number>} Number of commands
    */
@@ -103,7 +118,9 @@ export class Handler {
 
   /**
    * Registers an after-send plugin handler
+   * 
    * @param {import('./plugin.js').Plugin} p - Plugin instance
+   * @returns {void}
    */
   after(p) {
     const newp = new Plugin(p);
@@ -112,7 +129,9 @@ export class Handler {
 
   /**
    * Executes after-send handlers for a message
+   * 
    * @param {import('./ctx.js').Ctx} ctx - Message context
+   * @returns {void}
    */
   after_send(ctx) {
     for (const [_, p] of this.afterSend.entries()) {
@@ -124,7 +143,9 @@ export class Handler {
 
   /**
    * Registers a new plugin
+   * 
    * @param {import('./plugin.js').Plugin} p - Plugin instance
+   * @returns {void}
    */
   on(p) {
     const newp = new Plugin(p);
@@ -134,7 +155,9 @@ export class Handler {
 
   /**
    * Reloads and reorganizes plugin commands and listeners
+   * 
    * @private
+   * @returns {void}
    */
   reloadPlugins() {
     // clear commands and listeners
@@ -161,8 +184,10 @@ export class Handler {
 
   /**
    * Adds an event handler
+   * 
    * @param {string} e - Event name
    * @param {(handler: Handler, sock: import('baileys').WASocket, event: any) => void} f - Event handler function
+   * @returns {void}
    */
   add_handler(e, f) {
     this.handlers.set(e, f);
@@ -170,20 +195,23 @@ export class Handler {
 
   /**
    * Attaches a socket client and registers event handlers
+   * 
    * @param {import('baileys').WASocket} sock - Baileys socket client
+   * @returns {Promise<void>}
    */
-  attach(sock) {
+  async attach(sock) {
     this.sock = sock;
 
     for (const [event, handler] of this.handlers) {
-      sock.ev.on(event, (event) => {
-        handler(this, sock, event);
+      sock.ev.on(event, async (event) => {
+        await handler(this, sock, event);
       });
     }
   }
 
   /**
    * Loads plugins from a directory
+   * 
    * @async
    * @param {string} dir - Plugin directory path
    * @returns {Promise<void>}
@@ -231,46 +259,57 @@ export class Handler {
 
 /**
  * Handles message upsert events from WhatsApp
+ * 
  * @param {Handler} handler - Handler instance
  * @param {import('baileys').WASocket} sock - Baileys socket client
  * @param {Object} upsert - Message upsert event
  * @param {import('baileys').WAMessage[]} upsert.messages - Array of new/updated messages
  * @param {'append'|'notify'} upsert.type - Type of update (append for sent messages, notify for received)
+ * @returns {Promise<void>}
  * @private
  */
-function handle_upsert(handler, sock, upsert) {
+async function handle_upsert(handler, sock, upsert) {
   try {
     if (!upsert?.messages) return;
 
     for (const message of upsert.messages) {
       const ctx = new Ctx({ handler: handler, sock: sock, update: message, type: upsert.type });
       if (upsert?.type === 'notify') {
-        // looping through listeners
+        // Process listeners sequentially
         for (const pid of handler.listeners) {
           const listener = handler.plugins.get(pid);
-          if (listener?.check(ctx)) {
+          if (listener && await listener.check(ctx)) {
             try {
-              listener.exec(ctx);
+              await listener.exec(ctx);
             } catch (error) {
               console.error(`Error executing listener ${pid}:`, error);
             }
           }
         }
 
-        // looping through plugins with prefix
+        // Process command plugins
         if (handler.commands.has(ctx.pattern)) {
           const id = handler.commands.get(ctx.pattern);
           const plugin = handler.plugins.get(id);
-          if (plugin.check(ctx)) {
+          if (plugin && await plugin.check(ctx)) {
             try {
-              plugin.exec(ctx);
+              await plugin.exec(ctx);
             } catch (error) {
               console.error(`Error executing plugin ${id}:`, error);
             }
           }
         }
       } else if (upsert?.type === 'append') {
-        handler.after_send(ctx);
+        // Process after-send handlers
+        for (const [_, p] of handler.afterSend.entries()) {
+          if (p.exec) {
+            try {
+              await p.exec(ctx);
+            } catch (error) {
+              console.error(`Error executing after-send handler:`, error);
+            }
+          }
+        }
       }
     }
   } catch (err) {

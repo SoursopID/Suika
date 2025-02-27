@@ -20,9 +20,9 @@ export const on = {
   ],
 
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
-  exec: (m) => {
+  exec: async (m) => {
     const start = Date.now();
     const est = Math.floor(start - m.timestamp);
-    m.reply({ text: formatElapse(est) });
+    await m.reply({ text: formatElapse(est) });
   }
 };

@@ -13,11 +13,18 @@ import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { pino } from 'pino';
 import { Handler } from "./handler.js";
 
+/**
+ * @typedef {Object} ClientOptions
+ * @property {string} [sessionDir='session'] - Directory to store session files
+ * @property {string} [pluginDir='./plugins'] - Directory to load plugins from
+ * @property {string} [dataDir='./data'] - Directory to store data files
+ */
+
 /** 
- * @param {Object} options 
- * @param {string} options.sessionDir - directory to store session files
- * @param {string} options.pluginDir - directory to load plugins from
- * @param {string} options.dataDir - directory to store data files
+ * Starts a WhatsApp client with the specified options
+ * 
+ * @param {ClientOptions} options - Client configuration options
+ * @returns {Promise<import('baileys').WASocket>} The connected WhatsApp socket
  */
 async function clientStart(options) {
   const sessionDir = options?.sessionDir ?? 'session';
@@ -50,7 +57,7 @@ async function clientStart(options) {
 
   sock.ev.on('creds.update', saveCreds);
 
-  handler.attach(sock);
+  await handler.attach(sock);
 
   console.log(`${await handler.countListeners()} listeners attached.`);
   console.log(`${await handler.countCommands()} commands loaded.`);
@@ -58,12 +65,17 @@ async function clientStart(options) {
   return sock;
 }
 
+/**
+ * Default client options
+ * @type {ClientOptions}
+ */
 const clientOptions = {
   sessionDir: './session',
   pluginDir: './plugins',
   dataDir: './data'
 }
 
+// Start the client with default options
 clientStart(clientOptions).catch(err => {
   console.error('Error in client:', err);
 });

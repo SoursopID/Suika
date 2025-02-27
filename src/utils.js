@@ -11,6 +11,7 @@
 
 /**
  * Generate a random hexadecimal string of specified length
+ * 
  * @param {number} len - Length of the desired hex string
  * @returns {string} Uppercase hexadecimal string
  */
@@ -23,15 +24,27 @@ export function genHEXID(len) {
   return res.toUpperCase();
 }
 
-/** Number of milliseconds in a second */
+/** 
+ * Number of milliseconds in a second
+ * @type {number}
+ */
 const SECOND = 1000;
-/** Number of milliseconds in a minute */
+
+/** 
+ * Number of milliseconds in a minute
+ * @type {number}
+ */
 const MINUTE = 60 * SECOND;
-/** Number of milliseconds in an hour */
+
+/** 
+ * Number of milliseconds in an hour
+ * @type {number}
+ */
 const HOUR = 60 * MINUTE;
 
 /** 
  * Format elapsed time into human readable string
+ * 
  * @param {number} elapse - Time in milliseconds
  * @returns {string} Formatted string (e.g. "5h 30m 20s", "45m 30s", "30s", "100ms")
  */
@@ -49,6 +62,7 @@ export function formatElapse(elapse) {
 
 /**
  * Shorten a string by replacing middle characters with ".."
+ * 
  * @param {string} str - Input string
  * @param {number} len - Desired total length
  * @returns {string} Shortened string or empty string if input is falsy
@@ -64,11 +78,15 @@ export function shortTo(str, len) {
   }
 }
 
-/** Regular expression for matching URLs in text */
+/** 
+ * Regular expression for matching URLs in text
+ * @type {RegExp}
+ */
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 /**
  * Extract URLs from text content
+ * 
  * @param {string} text - Text to search for URLs
  * @returns {Promise<string[]>} Array of found URLs, or empty array if none found
  */

@@ -21,7 +21,7 @@ export const on = {
   ],
 
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
-  exec: (m) => {
+  exec: async (m) => {
     let logs = [m.timestamp, m.type];
 
     let elapse = 0;
@@ -47,7 +47,9 @@ export const on = {
     };
     snippet = snippet.replaceAll("\n", " ");
 
-    logs.push("on", m.key?.remoteJid, m.pattern, snippet);
+    const chat = await m.getChatName() ?? m.chat;
+
+    logs.push("on", chat, m.pattern, snippet);
 
     console.log(...logs);
   }

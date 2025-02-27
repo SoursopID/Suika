@@ -19,8 +19,8 @@ export const on = {
   ],
 
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
-  exec: (m) => {
-    const resp = eval(m.args);
+  exec: async (m) => {
+    const resp = await eval(m.args);
 
     m.reply({ text: String(resp), quote: m.msg });
   }

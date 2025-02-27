@@ -92,16 +92,15 @@ export class Plugin {
   /**
    * Check if the plugin can execute for given context
    * @param {import('./ctx.js').Ctx} ctx - Message context
-   * @returns {boolean} True if all checks pass according to checkRule
+   * @returns {Promise<boolean>} True if all checks pass according to checkRule
    */
-  check(ctx) {
+  async check(ctx) {
     if (this.disabled == true) {
       return false;
     }
 
     if (this.timeout > 0) {
-      const diff = new Date().getTime() - (ctx.timestamp * 1000);
-
+      const diff = new Date().getTime() - ctx.timestamp;
       if (diff > this.timeout) {
         return false;
       }
@@ -110,7 +109,7 @@ export class Plugin {
     if (this.checks) {
       let checkeds = [];
       for (const check of this.checks) {
-        checkeds.push(check(ctx));
+        checkeds.push(await check(ctx));
       }
       if (this.checkRule === MustAll) {
         return checkeds.every(Boolean);

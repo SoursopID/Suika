@@ -17,10 +17,11 @@ const skipMessageTypes = [
 
 /**
  * Extracts text content and context info from a message
+ * 
  * @param {Partial<import('baileys').WAMessage>} m - Message object
  * @returns {{text: string, contextInfo: import('baileys').WAContextInfo | null, type: string}} Extracted text and context
  */
-function extactTextContext(m) {
+export function extactTextContext(m) {
   let resp = {
     text: "",
     contextInfo: null,
@@ -58,43 +59,47 @@ function extactTextContext(m) {
 }
 
 /**
- * @typedef {Object} Ctx - Context
+ * @typedef {Object} Ctx - Context object for message handling
  * @property {import('./handler.js').Handler} handler - Handler instance
  * @property {import('baileys').WASocket} sock - Baileys socket client
- * @property {import('baileys').WAMessage} update - Message update
- * @property {string} type - Update type
+ * @property {import('baileys').WAMessage} update - Original message update
+ * @property {string} type - Update type (notify or append)
  * @property {import('baileys').WAMessageKey} key - Message key
- * @property {import('baileys').WAMessage} message - Message
- * @property {string} messageType - Message type
- * @property {number} timestamp - Message timestamp
+ * @property {import('baileys').WAMessage} message - Message content
+ * @property {string} messageType - Type of message (conversation, imageMessage, etc.)
+ * @property {number} timestamp - Message timestamp in milliseconds
  * @property {string} id - Message ID
- * @property {string} chat - Chat ID
- * @property {string} sender - Sender ID
- * @property {boolean} fromMe - From me
- * @property {string} pushName - Push name
- * @property {string} text - Message text
- * @property {string} pattern - Command pattern
- * @property {string} args - Command arguments
- * @property {import('baileys').WAContextInfo} contextInfo - Context info
- * @property {import('baileys').WAMessage} quotedMessage - Quoted message
- * @property {string} quotedText - Quoted message text
- * @property {string} stanzaId - Stanza ID
- * @property {string} participant - Participant ID
- * @property {number} expiration - Expiration time
+ * @property {string} chat - Chat ID (JID)
+ * @property {string} sender - Sender ID (JID)
+ * @property {boolean} fromMe - Whether message was sent by the bot
+ * @property {string} pushName - Sender's display name
+ * @property {boolean} isGroup - Whether the chat is a group
+ * @property {string} text - Message text content
+ * @property {string} pattern - Command pattern (first word of message)
+ * @property {string} args - Command arguments (text after pattern)
+ * @property {import('baileys').WAContextInfo} contextInfo - Context info from message
+ * @property {import('baileys').WAMessage} quotedMessage - Quoted message if any
+ * @property {string} quotedText - Text content of quoted message
+ * @property {string} stanzaId - Stanza ID from context
+ * @property {string} participant - Participant ID from context
+ * @property {number} expiration - Expiration time for message
  * @property {Array<string>} mentions - Mentioned participants
  */
 
 /**
- * Context class
- * @class
+ * Context class for handling WhatsApp messages
+ * 
+ * @class Ctx
  */
 export class Ctx {
   /**
-   * @param {Object} options - Options for creating a new Context
+   * Creates a new message context
+   * 
+   * @param {Object} options - Options for creating context
    * @param {import('./handler.js').Handler} options.handler - Handler instance
    * @param {import('baileys').WASocket} options.sock - Baileys socket client 
    * @param {import('baileys').WAMessage} options.update - Message update
-   * @param {string} options.type - Update type
+   * @param {string} options.type - Update type (notify or append)
    */
   constructor(options) {
     /** @type {import('./handler.js').Handler} */
@@ -115,6 +120,12 @@ export class Ctx {
     this.parse();
   }
 
+  /**
+   * Parses the message update to extract relevant information
+   * 
+   * @private
+   * @returns {void}
+   */
   parse() {
     const m = this.update?.message;
 
@@ -125,6 +136,8 @@ export class Ctx {
     this.sender = this.key?.participant ?? this.update?.participant;
     this.fromMe = this.key?.fromMe;
     this.pushName = this.update?.pushName;
+
+    this.isGroup = this.chat?.endsWith('@g.us');
 
     const ext = extactTextContext(m)
     this.messageType = ext.type;
@@ -147,22 +160,65 @@ export class Ctx {
     }
   }
 
-  /** 
-   * Send message to chat
-   * @param {string} to - Chat ID
-   * @param {Partial<import('baileys').WAMessage>} m - Message object
-   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+  /**
+   * Gets metadata for a group
+   * 
+   * @param {string} jid - Group JID
+   * @returns {Promise<import('baileys').GroupMetadata>} Group metadata
    */
-  send(to, m) {
+  async getGroupMetadata(jid) {
+    if (!this.handler?.groupMetadata.has(jid)) {
+      const data = await this.sock.groupMetadata(jid);
+      if (data) this.handler.groupMetadata.set(jid, data);
+    }
+
+    // Return the cached value
+    return Promise.resolve(this.handler.groupMetadata.get(jid));
+  }
+
+  /**
+   * Gets the name of the current group
+   * 
+   * @returns {Promise<string|undefined>} Group name or undefined if not available
+   */
+  async getGroupName() {
+    /** @type {import('baileys').GroupMetadata} */
+    const metadata = await this.getGroupMetadata(this.chat);
+
+    if (metadata) return metadata.subject;
+  }
+
+  /**
+   * Gets the name of the current chat (group name or contact name)
+   * 
+   * @returns {Promise<string|undefined>} Chat name or undefined if not available
+   */
+  async getChatName() {
+    if (this.isGroup) {
+      return this.getGroupName();
+    } else {
+      return this.pushName;
+    }
+  }
+
+  /** 
+   * Sends a message to a specified chat
+   * 
+   * @param {string} to - Destination chat JID
+   * @param {Partial<import('baileys').WAMessage>} m - Message object
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
+   */
+  async send(to, m) {
     return this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
   }
 
   /**
-   * Reply to the current message
+   * Replies to the current message
+   * 
    * @param {Partial<import('baileys').WAMessage>} m - Message object to send as reply
-   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
    */
-  reply(m) {
+  async reply(m) {
 
     const exp = this.expiration ?? this.handler.expirations.get(this.chat);
     if (exp) {
@@ -170,27 +226,29 @@ export class Ctx {
       m.contextInfo.expiration = exp;
     }
 
-    return this.send(this.chat, m);
+    return await this.send(this.chat, m);
   }
 
   /**
-   * React to a message with the given emoji
-   * @param {string} to - 
-   * @param {string} emo - Emoji to send 
-   * @param {import('baileys').WAMessageKey} key - Message key
-   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   * Reacts to a specific message with an emoji
+   * 
+   * @param {string} to - Destination chat JID
+   * @param {string} emo - Emoji to send as reaction
+   * @param {import('baileys').WAMessageKey} key - Message key to react to
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent reaction info
    */
-  reactTo(to, emo, key) {
-    return this.send(to, { react: { text: emo, key: key } })
+  async reactTo(to, emo, key) {
+    return await this.send(to, { react: { text: emo, key: key } })
   }
 
   /**
-   * React to the current message with the given emoji
-   * @param {string} emo - Emoji to send 
-   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>}
+   * Reacts to the current message with an emoji
+   * 
+   * @param {string} emo - Emoji to send as reaction
+   * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent reaction info
    */
-  react(emo) {
-    return this.reactTo(this.chat, emo, this.key)
+  async react(emo) {
+    return await this.reactTo(this.chat, emo, this.key)
   }
 
 }

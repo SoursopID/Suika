@@ -12,117 +12,160 @@
 import fs from 'fs';
 
 /**
- * @typedef {Object} Config
- * @property {string} jsonName - The name of the JSON file.
- * @property {Map<string, any>} data - The data of the config.
- * @property {boolean} autosave - If true, the config will be saved automatically when changed.
+ * @typedef {Object} ConfigOptions
+ * @property {string} [jsonName] - The name of the JSON file to use for storage.
+ * @property {string} [unique] - A unique identifier used to generate the default JSON filename.
+ * @property {boolean} [autosave=false] - If true, the config will be saved automatically when changed.
  */
 
 /**
- * The config class.
- * @class 
+ * @typedef {Object} Config
+ * @property {string} jsonName - The name of the JSON file.
+ * @property {Object} data - The data stored in the config.
+ * @property {boolean} autosave - If true, the config will be saved automatically when changed.
+ * @property {boolean} dirty - Indicates whether the config has unsaved changes.
+ */
+
+/**
+ * The Config class provides a simple interface for loading, modifying, and saving
+ * configuration data to and from JSON files.
+ * 
+ * @class Config
  */
 export class Config {
   /**
+   * Creates a new Config instance.
    * 
-   * @param {Object} options 
-   * @param {string} options.jsonName
-   * @param {string} options.unique
-   * @param {boolean} options.autosave
+   * @param {ConfigOptions} [options] - Configuration options
+   * @param {string} [options.jsonName] - The name of the JSON file to use
+   * @param {string} [options.unique] - A unique identifier to use in the default filename
+   * @param {boolean} [options.autosave=false] - Whether to automatically save changes
    */
   constructor(options) {
-    /** @type {string} */
+    /** 
+     * The name of the JSON file where config data is stored
+     * @type {string} 
+     */
     this.jsonName = options?.jsonName ?? `json_${options?.unique}.json`;
 
-    /** @type {Map<string, any>} */
-    this.data = new Map();
+    /** 
+     * The configuration data object
+     * @type {Object.<string, any>} 
+     */
+    this.data = {};
 
-    /** @type {boolean} */
+    /** 
+     * Whether to automatically save after changes
+     * @type {boolean} 
+     */
     this.autosave = options?.autosave ?? false;
+
+    /** 
+     * Whether the config has unsaved changes
+     * @type {boolean} 
+     */
+    this.dirty = false;
 
     this.load(this.jsonName);
   }
 
   /**
-   * Load the config from a JSON file.
-   * @async
-   * @param {string} filename 
+   * Loads configuration data from a JSON file.
+   * 
+   * @param {string} [filename] - The filename to load from. Defaults to this.jsonName if not provided.
+   * @returns {boolean} - True if loading was successful, false otherwise.
    */
-  async load(filename) {
+  load(filename) {
     if (!filename) filename = this.jsonName;
     try {
-      const data = JSON.parse(fs.readFileSync(filename, 'utf8'));
-      for (const [key, value] of Object.entries(data)) {
-        this.data.set(key, value);
-      }
-
+      // Use a direct object instead of Map for better performance
+      this.data = JSON.parse(fs.readFileSync(filename, 'utf8'));
       return true;
     } catch (e) {
-      console.log(e)
+      // Only log if it's not a file not found error
+      if (e.code !== 'ENOENT') {
+        console.log(e);
+      }
       return false;
     }
   }
 
   /**
-   * Save the config to a JSON file.
-   * @async
-   * @param {string} filename 
+   * Saves the current configuration data to a JSON file.
+   * 
+   * @param {string} [filename] - The filename to save to. Defaults to this.jsonName if not provided.
+   * @returns {boolean} - True if saving was successful, false otherwise.
    */
-  async save(filename) {
+  save(filename) {
     if (!filename) filename = this.jsonName;
+    if (!this.dirty && filename === this.jsonName) return true;
+    
     try {
-      fs.writeFileSync(filename, JSON.stringify(Object.fromEntries(this.data), null, 2));
+      fs.writeFileSync(filename, JSON.stringify(this.data, null, 2));
+      this.dirty = false;
       return true;
     } catch (e) {
       console.log(e);
       return false;
     }
-
   }
 
   /** 
-   * Get a value from the config.
-   * @param {string} key 
-   * @returns {any}
+   * Gets a value from the config by key.
+   * 
+   * @param {string} key - The key to retrieve the value for
+   * @returns {any} - The value associated with the key, or undefined if the key doesn't exist
    */
   get(key) {
-    return this.data.get(key);
+    return this.data[key];
   }
 
   /**
-   * Set a value to the config.
-   * @param {string} key 
-   * @param {any} value 
+   * Sets a value in the config for the specified key.
+   * If autosave is enabled, the config will be saved after setting the value.
+   * 
+   * @param {string} key - The key to set
+   * @param {any} value - The value to associate with the key
+   * @returns {void}
    */
   set(key, value) {
-    this.data.set(key, value);
+    this.data[key] = value;
+    this.dirty = true;
     if (this.autosave) this.save();
   }
 
   /**
-   * Delete a value from the config.
-   * @param {string} key 
+   * Deletes a key-value pair from the config.
+   * If autosave is enabled, the config will be saved after deletion.
+   * 
+   * @param {string} key - The key to delete
+   * @returns {void}
    */
   delete(key) {
-    this.data.delete(key);
+    delete this.data[key];
+    this.dirty = true;
     if (this.autosave) this.save();
   }
 
   /**
-   * Check if a key exists in the config.
-   * @param {string} key
-   * @returns {boolean}
+   * Checks if a key exists in the config.
+   * 
+   * @param {string} key - The key to check
+   * @returns {boolean} - True if the key exists, false otherwise
    */
   has(key) {
-    return this.data.has(key);
+    return key in this.data;
   }
 
   /**
-   * Clear the config.
+   * Clears all data from the config.
+   * If autosave is enabled, the empty config will be saved.
+   * 
+   * @returns {void}
    */
   clear() {
-    this.data.clear();
+    this.data = {};
+    this.dirty = true;
     if (this.autosave) this.save();
   }
-
 }
