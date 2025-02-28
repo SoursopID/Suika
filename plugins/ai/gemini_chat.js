@@ -14,7 +14,7 @@ import { extactTextContext } from '../../src/ctx.js';
 import { MustAll } from '../../src/plugin.js';
 import { crc32s, genHEXID } from '../../src/utils.js';
 import { gemini } from './gemini.js';
-import { downloadContentFromMessage } from 'baileys';
+import { downloadContentFromMessage, downloadMediaMessage } from 'baileys';
 import fs from 'fs';
 
 const geminiWatchID = new Config({ jsonName: 'data/gemini_watch_id.json', autosave: true });
@@ -85,7 +85,7 @@ async function geminiChat(m, query) {
     }
 
     const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
-    const stream = await downloadContentFromMessage(content, ext.type);
+    const stream = await downloadMediaMessage(mm, "stream");
     const saved = fs.createWriteStream(tempFilename);
 
     process.stdin.pipe(stream).pipe(saved);
