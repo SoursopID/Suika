@@ -12,6 +12,11 @@
 import { exec } from "child_process";
 import util from "util";
 
+const filters = [
+  /* hide ip */
+  (s) => s.replace(/(\d{1,3})\.\d{1,3}\.\d{1,3}\.\d{1,3}/, "*.*.*.*"),
+]
+
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
   cmds: ["#"],
@@ -35,7 +40,13 @@ export const on = {
         console.log(stderr);
         return;
       }
-      await m.reply({ text: String(stdout), quote: m.msg });
+
+      let rest = String(stdout);
+      for (const filter of filters) {
+        rest = filter(rest);
+      }
+
+      await m.reply({ text: rest, quote: m.msg });
     } catch (error) {
       console.log(error);
     }
