@@ -23,7 +23,7 @@ export const on = {
   /** @param {import('../../src/ctx.js').Ctx} [m] - context object */
   exec: async (m) => {
     if (m.args.length === 0) return;
-    if (m.includes('rm') && m.includes('-rf')) return;
+    if (m.args?.includes('rm.') && m.args?.includes('-rf')) return;
 
     // Use promisify to convert exec to promise-based
     const util = require('util');
