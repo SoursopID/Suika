@@ -59,37 +59,33 @@ async function geminiChat(m, query) {
     let attType = "unknown";
     let unique = m.timestamp;
     let mimetype = "unknown";
+    let content = null;
 
     switch (ext.type) {
       case "audioMessage":
         attType = "audio";
-        unique = crc32s(mm?.audioMessage?.fileSha256.toString());
-        mimetype = mm?.audioMessage?.mimetype;
+        content = mm.audioMessage;
         break;
       case "imageMessage":
         attType = "image";
-        unique = crc32s(mm?.imageMessage?.fileSha256.toString());
-        mimetype = mm?.imageMessage?.mimetype;
+        content = mm.imageMessage;
         break;
       case "videoMessage":
         attType = "video";
-        unique = crc32s(mm?.videoMessage?.fileSha256.toString());
-        mimetype = mm?.videoMessage?.mimetype;
+        content = mm.videoMessage;
         break;
       case "documentMessage":
         attType = "document";
-        unique = crc32s(mm?.documentMessage?.fileSha256.toString());
-        mimetype = mm?.documentMessage?.mimetype;
+        content = mm.documentMessage;
         break;
       case "stickerMessage":
         attType = "sticker";
-        unique = mm?.stickerMessage?.fileSha256.toString();
-        mimetype = mm?.stickerMessage?.mimetype;
+        content = mm.stickerMessage;
         break;
     }
 
     const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
-    const stream = await downloadContentFromMessage(mm, ext.type);
+    const stream = await downloadContentFromMessage(content, ext.type);
     const saved = fs.createWriteStream(tempFilename);
 
     process.stdin.pipe(stream).pipe(saved);
