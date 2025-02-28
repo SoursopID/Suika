@@ -46,7 +46,9 @@ export const on = {
         rest = filter(rest);
       }
 
-      await m.reply({ text: rest, quote: m.msg });
+      rest = rest?.trim();
+
+      if (rest?.length > 0) await m.reply({ text: rest, quote: m.msg });
     } catch (error) {
       console.log(error);
     }
