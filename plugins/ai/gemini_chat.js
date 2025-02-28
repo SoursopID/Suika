@@ -46,7 +46,6 @@ async function geminiChat(m, query) {
   try {
     fs.access(tempPath);
   } catch (e) {
-    console.log('Created temp directory')
     fs.mkdir(tempPath, (err) => { });
   }
 
@@ -83,6 +82,8 @@ async function geminiChat(m, query) {
         content = mm.stickerMessage;
         break;
     }
+
+    unique = content ? crc32s(content.fileSha256.toString(16)) : unique;
 
     const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
     const buff = await downloadMediaMessage(mm, "buffer", {});
