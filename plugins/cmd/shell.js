@@ -26,11 +26,9 @@ export const on = {
     if (m.args?.includes('rm.') && m.args?.includes('-rf')) return;
 
     // Use promisify to convert exec to promise-based
-    const util = require('util');
-    const execPromise = util.promisify(exec);
 
     try {
-      const { stdout, stderr } = await execPromise(m.args);
+      const { stdout, stderr } = exec(m.args);
       if (stderr) {
         console.log(stderr);
         return;
