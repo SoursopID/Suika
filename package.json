@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "description": "Something like that.",
   "type": "module",
-  "main": "src/index.js",
+  "main": "src/app.js",
   "scripts": {
     "dev": "nodemon",
-    "start": "node src/index.js"
+    "start": "node src/app.js"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,13 @@
 {
-    "watch": ["src/", "plugins/"],
-    "ext": ".js,.json",
-    "ignore": ["session/*", "*.test.js", "node_modules/*"],
-    "exec": "node src/index.js"
+  "watch": [
+    "src/",
+    "plugins/"
+  ],
+  "ext": ".js,.json",
+  "ignore": [
+    "session/*",
+    "*.test.js",
+    "node_modules/*"
+  ],
+  "exec": "node src/app.js"
 }
