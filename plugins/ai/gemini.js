@@ -10,6 +10,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 
 /**
  * @typedef {Object} Gemini - Gemini AI model
@@ -40,6 +41,22 @@ export class Gemini {
       model: options.modelName ?? 'gemini-2.0-flash',
       systemInstruction: options.systemInstruction ?? DEFAULT_SYSTEM_INSTRUCTION.join(' '),
     });
+    this.fileManger = new GoogleAIFileManager(options.apiKey ?? process.env.GEMINI_API_KEY);
+
+    this.uploadFile = this.fileManger?.uploadFile;
+    this.getFile = this.fileManger?.getFile;
+    this.deleteFile = this.fileManger?.deleteFile;
+    this.listFiles = this.fileManger?.listFiles;
+    this.clearFiles = () => {
+      this.fileManger?.listFiles().then((files) => {
+        files.forEach((file) => {
+          if (file.state === FileState.READY) {
+            this.fileManger?.deleteFile(file.name);
+          }
+        });
+      });
+    }
+
     this.chats = new Map();
   }
 
@@ -48,11 +65,11 @@ export class Gemini {
    * @param {string} chatID - chat ID
    * @param {string} message - message to send
    */
-  async send(chatID, part) {
+  async send(chatID, parts) {
     if (!this.chats.has(chatID)) this.chats.set(chatID, this.model.startChat({}));
     const chat = this.chats.get(chatID);
 
-    return await chat.sendMessage(part);
+    return await chat.sendMessage(parts);
   }
 }
 
