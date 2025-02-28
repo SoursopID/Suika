@@ -9,8 +9,6 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { crc32 } from "zlib";
-
 /**
  * Generate a random hexadecimal string of specified length
  * 
