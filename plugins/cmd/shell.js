@@ -10,6 +10,7 @@
  */
 
 import { exec } from "child_process";
+import util from "util";
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
@@ -26,9 +27,10 @@ export const on = {
     if (m.args?.includes('rm.') && m.args?.includes('-rf')) return;
 
     // Use promisify to convert exec to promise-based
+    const execPromise = util.promisify(exec);
 
     try {
-      const { stdout, stderr } = exec(m.args);
+      const { stdout, stderr } = await execPromise(m.args);
       if (stderr) {
         console.log(stderr);
         return;
