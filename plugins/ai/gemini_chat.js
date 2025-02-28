@@ -47,7 +47,7 @@ async function geminiChat(m, query) {
     fs.access(tempPath);
   } catch (e) {
     console.log('Created temp directory')
-    fs.mkdir(tempPath, { recursive: true }, (err) => { });
+    fs.mkdir(tempPath, (err) => { });
   }
 
   for (const mm of attchs) {
