@@ -318,7 +318,7 @@ async function handle_message_upsert(handler, sock, upsert) {
           try {
             if (plugin.check(ctx)) await plugin.exec(ctx);
           } catch (error) {
-            console.error(`Error executing plugin ${id}:`, error);
+            console.error(`Error executing plugin ${plugin.cmds}:`, error);
           }
         }
       } else if (upsert?.type === 'append') {
