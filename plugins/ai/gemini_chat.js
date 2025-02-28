@@ -85,19 +85,15 @@ async function geminiChat(m, query) {
     }
 
     const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
-    const stream = await downloadMediaMessage(mm, "stream");
-    const saved = fs.createWriteStream(tempFilename);
+    const buff = await downloadMediaMessage(mm, "buffer", {});
+    fs.writeFile(tempFilename, buff);
 
-    process.stdin.pipe(stream).pipe(saved);
+    const respUp = await gemini.uploadFile(tempFilename, {
+      mimeType: mimetype,
+      displayName: `${attType}-${unique}`,
+    });
 
-    saved.on('finish', async () => {
-      const respUp = await gemini.uploadFile(tempFilename, {
-        mimeType: mimetype,
-        displayName: `${attType}-${unique}`,
-      });
-
-      parts.push(respUp);
-    })
+    if (respUp) parts.push(respUp);
   }
 
 
