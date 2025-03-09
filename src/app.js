@@ -65,7 +65,9 @@ async function clientStart(options) {
 
   const handler = new Handler(options);
 
+  /** @type {import('baileys').UserFacingSocketConfig} */
   const socketOptions = {
+    syncFullHistory: false,
     printQRInTerminal: method === 'qr',
     auth: state,
     browser: method === 'qr' ? ['macOS', 'Safari', '18.3'] : ['macOS', 'Chrome', '134.0.6998.31'],
