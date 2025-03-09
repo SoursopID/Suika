@@ -94,7 +94,6 @@ export function extractURLs(text) {
   return text.match(urlRegex) ?? [];
 }
 
-
 const makeCRCTable = () => {
   let c;
   let crcTable = [];
