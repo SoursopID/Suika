@@ -207,7 +207,7 @@ export class Ctx {
     this.chat = this.key?.remoteJid;
     this.sender = this.key?.participant ?? this.update?.participant;
     this.fromMe = this.key?.fromMe;
-    this.pushName = this.update?.pushName;
+    this.pushName = this.update?.pushName?.trim();
 
     this.isGroup = this.chat?.endsWith('@g.us');
 
@@ -328,7 +328,5 @@ export class Ctx {
   async react(emo) {
     return await this.reactTo(this.chat, emo, this.key)
   }
-
-
 
 }

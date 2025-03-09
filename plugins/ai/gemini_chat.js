@@ -12,9 +12,9 @@
 import { Config } from '../../src/config.js';
 import { extactTextContext } from '../../src/ctx.js';
 import { MustAll } from '../../src/plugin.js';
-import { crc32s, genHEXID } from '../../src/utils.js';
+import { crc32s } from '../../src/utils.js';
 import { gemini } from './gemini.js';
-import { downloadContentFromMessage, downloadMediaMessage } from 'baileys';
+import { downloadMediaMessage } from 'baileys';
 import fs from 'fs';
 
 const geminiWatchID = new Config({ jsonName: 'data/gemini_watch_id.json', autosave: true });
@@ -46,7 +46,7 @@ async function geminiChat(m, query) {
   try {
     fs.access(tempPath);
   } catch (e) {
-    fs.mkdir(tempPath, (err) => { });
+    fs.mkdir(tempPath, (er) => { if (er) console.error(er); });
   }
 
   for (const mm of attchs) {
@@ -86,15 +86,17 @@ async function geminiChat(m, query) {
     unique = content ? crc32s(content.fileSha256.toString(16)) : unique;
 
     const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
-    const buff = await downloadMediaMessage(mm, "buffer", {});
-    fs.writeFile(tempFilename, buff);
+    const buff = await downloadMediaMessage({ message: mm }, "buffer", {});
+    fs.writeFile(tempFilename, buff, async (err) => {
+      if (!err) {
+        const respUp = await gemini.uploadFile(tempFilename, {
+          mimeType: mimetype,
+          displayName: `${attType}-${unique}`,
+        });
 
-    const respUp = await gemini.uploadFile(tempFilename, {
-      mimeType: mimetype,
-      displayName: `${attType}-${unique}`,
+        if (respUp) parts.push(respUp);
+      }
     });
-
-    if (respUp) parts.push(respUp);
   }
 
 

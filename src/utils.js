@@ -125,3 +125,34 @@ export function crc32s(str) {
   const dec = (crc ^ (-1)) >>> 0;
   return dec.toString('16').toUpperCase();
 };
+
+/**
+ * Filter non-UTF-8 characters from string
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function cleanNonUTF8(text) {
+  if (typeof text !== 'string') {
+    return "";
+  }
+
+  if (text === null || text === undefined) {
+    return "";
+  }
+
+  const pola = /[^\x00-\x7F]+/g;
+  const cleanText = text.replace(pola, '');
+  return cleanText;
+}
+
+const reSpace = /[\s\u200B\u200F\u202A\u202E\u00A0]/g;
+/**
+ * Trim all whitespace characters from string
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function trimSpace(text) {
+  return text?.replace(reSpace, '');
+}
