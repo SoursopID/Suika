@@ -11,9 +11,15 @@
 
 
 import { AllowOne } from "../../src/plugin.js";
-import { formatElapse, shortTo } from "../../src/utils.js";
+import { formatElapse, isBot, shortTo } from "../../src/utils.js";
 import * as pen from "./pen.js";
 import * as emo from "../../src/emoji.js"
+import { Config } from "../../src/config.js";
+
+const idRecord = new Config({
+  jsonName: "./data/record_ids.json",
+  autosave: false,
+})
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
@@ -28,8 +34,11 @@ export const on = {
     let logs = [
       pen.red(time),
       m.type,
+      m.isGroup ? emo.Houses + ' ' : emo.BustInSilhouette,
       m.fromMe ? emo.BustInSilhouette : emo.BustsInSilhouette,
     ];
+
+    if (isBot(m)) logs.push(emo.Robot);
 
     let elapse = 0;
     if (m.timestamp) {
@@ -37,7 +46,7 @@ export const on = {
     }
     logs.push(formatElapse(elapse))
 
-    if (m.messageType) logs.push(pen.green(m.messageType));
+    if (m.mType) logs.push(pen.green(m.mType?.replaceAll('Message', '')));
 
     logs.push(m.quotedMessage ? `${shortTo(m.id, 8)} ${pen.yellow('=>')} ${shortTo(m.stanzaId, 8)
       }` : shortTo(m.id, 8));
