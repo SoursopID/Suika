@@ -1,6 +1,6 @@
 # Suika
 
-Suika is a WhatsApp bot for automation purposes.
+🍉 Suika is a WhatsApp bot for automation purposes.
 
 ## Table of Contents
 
