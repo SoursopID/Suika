@@ -25,7 +25,7 @@
   "homepage": "https://github.com/SoursopID/Suika#readme",
   "dependencies": {
     "@google/generative-ai": "^0.22.0",
-    "baileys": "github:WhiskeySockets/baileys#7466a8f",
+    "baileys": "github:SoursopID/Baileys#9a175a6a08b72a1e0a62a7632cca80f6a0ebd045",
     "dotenv": "^16.4.7",
     "pino": "^9.6.0",
     "qrcode-terminal": "^0.12.0"
