@@ -41,7 +41,8 @@ if (existsSync(envPath)) {
  * @property {string} [sessionDir='session'] - Directory to store session files
  * @property {string} [pluginDir='./plugins'] - Directory to load plugins from
  * @property {string} [dataDir='./data'] - Directory to store data files
- * @property {string} [method='otp'] - WhatsApp phone number to connect to
+ * @property {string} [method='otp'] - Authentication method to use, can be 'qr' or 'otp'
+ * @property {string} [phone=''] - WhatsApp number to send messages to
  */
 
 /** 
@@ -55,6 +56,7 @@ async function clientStart(options) {
   const pluginDir = options?.pluginDir ?? './plugins';
   const dataDir = options?.dataDir ?? './data';
   const method = options?.method ?? 'qr';
+  let phone = options?.phone ?? '';
 
   console.log(`sessionDir:`, sessionDir);
   console.log(`pluginDir:`, pluginDir);
@@ -81,7 +83,6 @@ async function clientStart(options) {
   if (method !== 'qr' && !state?.creds?.registered) {
     await delay(1000);
 
-    let phone
     while (!phone) {
       phone = await ask('Enter phone number: ');
       phone = phone?.replace(/[^+0-9]/g, '');
@@ -129,6 +130,7 @@ function getOptionsFromEnv() {
     pluginDir: process.env.SUIKA_PLUGIN_DIR ?? './plugins',
     dataDir: process.env.SUIKA_DATA_DIR ?? './data',
     method: process.env.SUIKA_METHOD ?? 'otp',
+    phone: process.env.SUIKA_PHONE ?? '',
     // Add any other environment-configurable options here
   };
 }
