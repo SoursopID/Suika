@@ -119,26 +119,26 @@ export class Ctx {
 
     this.parse();
 
-    this.getOrderDetails = this.sock?.upsertMessage
-    this.getCatalog = this.sock?.upsertMessage
-    this.getCollections = this.sock?.upsertMessage
-    this.productCreate = this.sock?.upsertMessage
-    this.productDelete = this.sock?.upsertMessage
-    this.productUpdate = this.sock?.upsertMessage
-    this.sendMessageAck = this.sock?.upsertMessage
-    this.sendRetryRequest = this.sock?.upsertMessage
-    this.rejectCall = this.sock?.upsertMessage
-    this.fetchMessageHistory = this.sock?.upsertMessage
-    this.requestPlaceholderResend = this.sock?.upsertMessage
-    this.getPrivacyTokens = this.sock?.upsertMessage
-    this.assertSessions = this.sock?.upsertMessage
-    this.relayMessage = this.sock?.upsertMessage
-    this.sendReceipt = this.sock?.upsertMessage
-    this.sendReceipts = this.sock?.upsertMessage
-    this.readMessages = this.sock?.upsertMessage
-    this.refreshMediaConn = this.sock?.upsertMessage
-    this.waUploadToServer = this.sock?.upsertMessage
-    this.fetchPrivacySettings = this.sock?.upsertMessage
+    this.getOrderDetails = this.sock?.getOrderDetails
+    this.getCatalog = this.sock?.getCatalog
+    this.getCollections = this.sock?.getCollections
+    this.productCreate = this.sock?.productCreate
+    this.productDelete = this.sock?.productDelete
+    this.productUpdate = this.sock?.productUpdate
+    this.sendMessageAck = this.sock?.sendMessageAck
+    this.sendRetryRequest = this.sock?.sendRetryRequest
+    this.rejectCall = this.sock?.rejectCall
+    this.fetchMessageHistory = this.sock?.fetchMessageHistory
+    this.requestPlaceholderResend = this.sock?.requestPlaceholderResend
+    this.getPrivacyTokens = this.sock?.getPrivacyTokens
+    this.assertSessions = this.sock?.assertSessions
+    this.relayMessage = this.sock?.relayMessage
+    this.sendReceipt = this.sock?.sendReceipt
+    this.sendReceipts = this.sock?.sendReceipts
+    this.readMessages = this.sock?.readMessages
+    this.refreshMediaConn = this.sock?.refreshMediaConn
+    this.waUploadToServer = this.sock?.waUploadToServer
+    this.fetchPrivacySettings = this.sock?.fetchPrivacySettings
     this.sendMessage = this.sock?.sendMessage;
     this.groupMetadata = this.sock?.groupMetadata;
     this.groupCreate = this.sock?.groupCreate;
@@ -287,7 +287,7 @@ export class Ctx {
    * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
    */
   async send(to, m) {
-    return await this.sendMessage(to, m, { messageId: genHEXID(32) });
+    return await this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
   }
 
   /**
