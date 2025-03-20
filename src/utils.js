@@ -9,6 +9,7 @@
  * (https://github.com/SoursopID/Suika)
  */
 
+
 /**
  * Generate a random hexadecimal string of specified length
  * 
@@ -154,4 +155,45 @@ const reSpace = /[\s\u200B\u200F\u202A\u202E\u00A0]/g;
  */
 export function trimSpace(text) {
   return text?.replace(reSpace, '');
+}
+
+/**
+ * Check if string is a valid hex color code
+ *
+ * @param {string} str
+ * @returns {boolean}
+ */
+export function isHex(str) {
+  return /[^0-9a-fA-F]/.test(str) == false;
+}
+
+/** @type {Map<string, number>} */
+const storeID = new Map();
+
+/** @type {number} */
+const maxReplyTime = 3 * 1000;
+
+/**
+ * Check if user is a bot
+ *
+ * @param{import('./ctx.js').Ctx} ctx - Context object 
+ * @returns {boolean}
+ */
+export function isBot(ctx) {
+  if (!isHex(ctx.id)) return true;
+
+  if (storeID.has(ctx.stanzaId)) {
+    const lastTime = storeID.get(ctx.stanzaId);
+    const diff = (ctx.timestamp - lastTime);
+    console.lo
+    if (diff < maxReplyTime) {
+      return true;
+    } else {
+      storeID.set(ctx.id, ctx.timestamp);
+    }
+  } else {
+    storeID.set(ctx.id, ctx.timestamp);
+  }
+
+  return false
 }
