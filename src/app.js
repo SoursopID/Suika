@@ -17,7 +17,6 @@ import { existsSync } from 'fs';
 import path from 'path';
 import readline from "node:readline";
 
-
 const question = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -71,12 +70,15 @@ async function clientStart(options) {
     printQRInTerminal: method === 'qr',
     auth: state,
     browser: method === 'qr' ? ['macOS', 'Safari', '18.3'] : ['macOS', 'Chrome', '134.0.6998.31'],
-    logger: pino({ level: 'warn' }),
+    logger: pino({ level: 'error' }),
   };
   const sock = makeWASocket(socketOptions);
   await handler.attach(sock);
 
-  if (method !== 'qr' && !state.creds.registered) {
+  // console.log(state);
+  // exit(1)
+
+  if (method !== 'qr' && !state?.creds?.registered) {
     await delay(1000);
 
     let phone
@@ -96,6 +98,8 @@ async function clientStart(options) {
     const { connection, lastDisconnect } = update;
 
     if (connection === 'close') {
+      console.log(connection, lastDisconnect);
+
       const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
       if (shouldReconnect) {
         clientStart(options);
@@ -133,10 +137,11 @@ function getOptionsFromEnv() {
 const clientOptions = getOptionsFromEnv();
 
 // Start the client with the configured options
-clientStart(clientOptions).catch(err => {
+try {
+  await clientStart(clientOptions)
+} catch (err) {
   console.error('Error in client:', err);
-});
-
+}
 
 
 
