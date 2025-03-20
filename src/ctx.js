@@ -66,7 +66,7 @@ export function extactTextContext(m) {
  * @property {string} type - Update type (notify or append)
  * @property {import('baileys').WAMessageKey} key - Message key
  * @property {import('baileys').WAMessage} message - Message content
- * @property {string} messageType - Type of message (conversation, imageMessage, etc.)
+ * @property {string} mType - Type of message (conversation, imageMessage, etc.)
  * @property {number} timestamp - Message timestamp in milliseconds
  * @property {string} id - Message ID
  * @property {string} chat - Chat ID (JID)
@@ -132,14 +132,12 @@ export class Ctx {
     this.requestPlaceholderResend = this.sock?.requestPlaceholderResend
     this.getPrivacyTokens = this.sock?.getPrivacyTokens
     this.assertSessions = this.sock?.assertSessions
-    this.relayMessage = this.sock?.relayMessage
     this.sendReceipt = this.sock?.sendReceipt
     this.sendReceipts = this.sock?.sendReceipts
     this.readMessages = this.sock?.readMessages
     this.refreshMediaConn = this.sock?.refreshMediaConn
     this.waUploadToServer = this.sock?.waUploadToServer
     this.fetchPrivacySettings = this.sock?.fetchPrivacySettings
-    this.sendMessage = this.sock?.sendMessage;
     this.groupMetadata = this.sock?.groupMetadata;
     this.groupCreate = this.sock?.groupCreate;
     this.groupLeave = this.sock?.groupLeave;
@@ -212,7 +210,7 @@ export class Ctx {
     this.isGroup = this.chat?.endsWith('@g.us');
 
     const ext = extactTextContext(m)
-    this.messageType = ext.type;
+    this.mType = ext.type;
 
     this.text = ext.text;
     this.contextInfo = ext.contextInfo;
@@ -281,30 +279,63 @@ export class Ctx {
 
   /** 
    * Sends a message to a specified chat
+   *
+   * @param {string} jid - Destination chat JID
+   * @param {import('baileys').WAProto.IMessage} m - Message object
+   * @param {import('baileys').MessageRelayOptions} opts - Send options
+   * @returns {Promise<string>} Sent message info
+   */
+  async relayMessage(jid, m, opts) {
+    const exp = this.handler.expirations.get(jid);
+    if (exp) {
+      for (let key in m) {
+        if (typeof m[key] === 'object' && m[key] !== null) {
+          console.log(key, m[key])
+          if (m[key].contextInfo === undefined || m[key].contextInfo === null) m[key].contextInfo = {};
+          m[key].contextInfo.expiration = exp;
+        }
+      }
+    }
+
+    if (!opts) {
+      opts = {}
+    }
+    opts.messageId = genHEXID(32);
+    return await this.sock.relayMessage(jid, m, opts)
+  }
+
+  /** 
+   * Sends a message to a specified chat
    * 
    * @param {string} to - Destination chat JID
-   * @param {Partial<import('baileys').WAMessage>} m - Message object
+   * @param {import('baileys').AnyMessageContent} m - Message object
+   * @param {import('baileys').MiscMessageGenerationOptions} opts - Send options
    * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
    */
-  async send(to, m) {
-    return await this.sock.sendMessage(to, m, { messageId: genHEXID(32) });
+  async send(to, m, opts) {
+    if (!opts) {
+      opts = {}
+    }
+    opts.messageId = genHEXID(32)
+    const exp = this.expiration ?? this.handler.expirations.get(this.chat);
+    if (exp) {
+      opts.ephemeralExpiration = exp;
+    }
+    return await this.sock.sendMessage(to, m, opts);
   }
 
   /**
    * Replies to the current message
    * 
-   * @param {Partial<import('baileys').WAMessage>} m - Message object to send as reply
+   * @param {import('baileys').AnyMessageContent} m - Message object to send as reply
+   * @param {import('baileys').MiscMessageGenerationOptions} opts - Send options
    * @returns {Promise<import('baileys').WAProto.WebMessageInfo>} Sent message info
    */
-  async reply(m) {
-
-    const exp = this.expiration ?? this.handler.expirations.get(this.chat);
-    if (exp) {
-      if (m.contextInfo === undefined || m.contextInfo === null) m.contextInfo = {};
-      m.contextInfo.expiration = exp;
+  async reply(m, opts) {
+    if (!opts) {
+      opts = {}
     }
-
-    return await this.send(this.chat, m);
+    return await this.send(this.chat, m, opts);
   }
 
   /**
