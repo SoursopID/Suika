@@ -9,7 +9,7 @@
  * (https://github.com/SoursopID/Suika)
  */
 
-import { genHEXID } from "./utils.js";
+import { genHEXID, isBot } from "./utils.js";
 
 const skipMessageTypes = [
   'messageContextInfo',
@@ -234,6 +234,15 @@ export class Ctx {
       const cmd = this.handler.getCMD(this.pattern);
       this.isCMDAllowed = cmd?.check(this);
     }
+  }
+
+  /**
+   * Checks if the message is from a bot
+   * 
+   * @returns {boolean} Whether the message is from a bot
+   */
+  isBot() {
+    return isBot(this);
   }
 
   /**
