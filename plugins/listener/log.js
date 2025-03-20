@@ -38,7 +38,7 @@ export const on = {
       m.fromMe ? emo.BustInSilhouette : emo.BustsInSilhouette,
     ];
 
-    if (isBot(m)) logs.push(emo.Robot);
+    if (m.isBot()) logs.push(emo.Robot);
 
     let elapse = 0;
     if (m.timestamp) {
