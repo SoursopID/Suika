@@ -6,7 +6,7 @@
   "main": "src/app.js",
   "scripts": {
     "dev": "nodemon",
-    "start": "node src/app.js"
+    "start": "bun src/app.js"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
   "homepage": "https://github.com/SoursopID/Suika#readme",
   "dependencies": {
     "@google/generative-ai": "^0.22.0",
-    "baileys": "github:SoursopID/Baileys#99142aac96608040b1b40d6bbff0dd4ef16c2d69",
+    "baileys": "github:SoursopID/Baileys#859bb1f972d3264ea4aada140e104dcbe0d3b7b4",
     "dotenv": "^16.4.7",
     "pino": "^9.6.0",
     "qrcode-terminal": "^0.12.0"
