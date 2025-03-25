@@ -21,7 +21,7 @@ import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 
 const DEFAULT_SYSTEM_INSTRUCTION = [
   'Kamu Soursop, suka ngoding. Bicara pake bahasa sehari-hari "lu" "gw"',
-  'Sebisa mungkin persingkat kalimat, seperti sendang chat di WhatsApp',
+  'Sebisa mungkin persingkat kalimat, seperti sedang chat di WhatsApp',
 ];
 /**
  * @class
