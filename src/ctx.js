@@ -9,6 +9,7 @@
  * (https://github.com/SoursopID/Suika)
  */
 
+import { jidEncode, jidNormalizedUser } from "baileys";
 import { genHEXID, isBot } from "./utils.js";
 
 const skipMessageTypes = [
@@ -200,6 +201,7 @@ export class Ctx {
     const m = this.update?.message;
 
     this.message = m;
+    this.originalParticipant = this.update?.originalParticipant;
     this.timestamp = this.update?.messageTimestamp ? this.update.messageTimestamp * 1000 : 0;
     this.id = this.key?.id;
     this.chat = this.key?.remoteJid;
@@ -227,7 +229,7 @@ export class Ctx {
     this.expiration = this.contextInfo?.expiration;
 
     if (this.expiration > 0) {
-      this.handler.expirations.set(this.chat, this.expiration);
+      this.handler.expirations.set(jidNormalizedUser(this.chat), this.expiration);
     }
 
     if (this.isCMD) {
@@ -295,7 +297,7 @@ export class Ctx {
    * @returns {Promise<string>} Sent message info
    */
   async relayMessage(jid, m, opts) {
-    const exp = this.handler.expirations.get(jid);
+    const exp = this.handler.expirations.get(jidNormalizedUser(jid));
     if (exp) {
       for (let key in m) {
         if (typeof m[key] === 'object' && m[key] !== null) {
@@ -326,7 +328,7 @@ export class Ctx {
       opts = {}
     }
     opts.messageId = genHEXID(32)
-    const exp = this.expiration ?? this.handler.expirations.get(this.chat);
+    const exp = this.expiration ?? this.handler.expirations.get(jidNormalizedUser(this.chat));
     if (exp) {
       opts.ephemeralExpiration = exp;
     }
