@@ -17,6 +17,7 @@ import { mkdirSync, readdirSync, statSync } from 'fs';
 import { platform } from "os";
 import { pathToFileURL } from "url";
 import { Config } from "./config.js";
+import chokidar from 'chokidar';
 
 /**
  * Default command prefix
@@ -82,6 +83,27 @@ export class Handler {
     this.handlers.set(GROUPS_UPSERT, handle_groups_upsert);
 
     this.ready = this.pluginReload(this.pluginDir);
+    this.lastUpdate = Date.now();
+
+    chokidar.watch(`${this.pluginDir}/**/*.js`, { persistent: true }).on('change',
+      /** 
+       * @param {string} path 
+       * @param {import('fs').Stats} stats
+       */
+      (path) => {
+
+        if (path.endsWith('.js')) {
+          const stats = statSync(path);
+          if (stats.mtimeMs > this.lastUpdate) {
+
+            console.log(`Reloading plugin: ${path}`);
+            this.plugins.clear();
+
+            this.pluginReload(this.pluginDir);
+            this.lastUpdate = stats.mtimeMs;
+          }
+        }
+      });
   }
 
   /**
@@ -182,7 +204,6 @@ export class Handler {
   /**
    * Reloads and reorganizes plugin commands and listeners
    * 
-   * @private
    * @returns {void}
    */
   reloadPlugins() {
@@ -247,8 +268,12 @@ export class Handler {
     for (const file of files) {
       let path = `${dir}/${file}`.replaceAll('//', '/');
 
-      if (statSync(path)?.isDirectory()) {
-        await this.pluginReload(path);
+      try {
+        if (statSync(path)?.isDirectory()) {
+          await this.pluginReload(path);
+        }
+      } catch (e) {
+        console.log(e.message);
       }
 
       if (file.endsWith('.js')) {
