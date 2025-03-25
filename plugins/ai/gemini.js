@@ -63,10 +63,12 @@ export class Gemini {
   /**
    * Sends a message to the Gemini AI model
    * @param {string} chatID - chat ID
-   * @param {string} message - message to send
+   * @param {Array<string | import('@google/generative-ai').Part>} parts - message to send
    */
   async send(chatID, parts) {
     if (!this.chats.has(chatID)) this.chats.set(chatID, this.model.startChat({}));
+
+    /** @type {import('@google/generative-ai').ChatSession} */
     const chat = this.chats.get(chatID);
 
     return await chat.sendMessage(parts);

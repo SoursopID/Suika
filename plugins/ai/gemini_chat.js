@@ -15,7 +15,6 @@ import { MustAll } from '../../src/plugin.js';
 import { crc32s } from '../../src/utils.js';
 import { gemini } from './gemini.js';
 import { downloadMediaMessage } from 'baileys';
-import fs from 'fs';
 
 const geminiWatchID = new Config({ jsonName: 'data/gemini_watch_id.json', autosave: true });
 
@@ -33,6 +32,7 @@ const attacements = [
  */
 async function geminiChat(m, query) {
 
+  /** @type {import('@google/generative-ai').Part[]} */
   const parts = [];
 
 
@@ -41,13 +41,6 @@ async function geminiChat(m, query) {
   }
 
   const attchs = [m.message, m.quotedMessage];
-
-  const tempPath = './temp';
-  try {
-    fs.access(tempPath);
-  } catch (e) {
-    fs.mkdir(tempPath, (er) => { if (er) console.error(er); });
-  }
 
   for (const mm of attchs) {
     if (!mm) continue;
@@ -64,41 +57,45 @@ async function geminiChat(m, query) {
       case "audioMessage":
         attType = "audio";
         content = mm.audioMessage;
+        mimetype = mm.audioMessage.mimetype;
         break;
       case "imageMessage":
         attType = "image";
         content = mm.imageMessage;
+        mimetype = mm.imageMessage.mimetype;
         break;
       case "videoMessage":
         attType = "video";
         content = mm.videoMessage;
+        mimetype = mm.videoMessage.mimetype;
         break;
       case "documentMessage":
         attType = "document";
         content = mm.documentMessage;
+        mimetype = mm.documentMessage.mimetype;
         break;
       case "stickerMessage":
         attType = "sticker";
         content = mm.stickerMessage;
+        mimetype = mm.stickerMessage.mimetype;
         break;
     }
 
     unique = content ? crc32s(content.fileSha256.toString(16)) : unique;
 
-    const tempFilename = `${tempPath}/${attType}-${unique}.bin`;
     const buff = await downloadMediaMessage({ message: mm }, "buffer", {});
-    fs.writeFile(tempFilename, buff, async (err) => {
-      if (!err) {
-        const respUp = await gemini.uploadFile(tempFilename, {
-          mimeType: mimetype,
-          displayName: `${attType}-${unique}`,
-        });
-
-        if (respUp) parts.push(respUp);
+    console.log(mimetype, buff);
+    if (!buff) {
+      continue;
+    }
+    parts.push({
+      inlineData: {
+        data: Buffer.from(buff).toString('base64'),
+        mimeType: mimetype,
       }
     });
-  }
 
+  }
 
   if (parts.length > 0) {
     const resp = await gemini.send(m.chat, parts);
@@ -119,7 +116,7 @@ async function geminiChat(m, query) {
 
 /** @type {import('../../src/plugin.js').Plugin} */
 export const on = {
-  cmds: ['gm', 'gemini'],
+  cmds: ['gm', 'gemini', 'sgm'],
   timeout: 15,
   checks: [
     (m) => { return m.fromMe },
