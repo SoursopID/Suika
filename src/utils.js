@@ -170,6 +170,9 @@ export function isHex(str) {
 /** @type {Map<string, number>} */
 const storeID = new Map();
 
+/** @type {Map<string, number>} */
+const isolatedJID = new Map();
+
 /** @type {number} */
 const maxReplyTime = 3 * 1000;
 
@@ -180,13 +183,21 @@ const maxReplyTime = 3 * 1000;
  * @returns {boolean}
  */
 export function isBot(ctx) {
-  if (!isHex(ctx.id)) return true;
+  if (ctx.originalParticipant) {
+    if (isolatedJID.has(ctx.originalParticipant)) return true;
+  }
+
+  if (!isHex(ctx.id)) {
+    if (ctx.originalParticipant) isolatedJID.set(ctx.originalParticipant, Date.now());
+    return true
+  };
 
   if (storeID.has(ctx.stanzaId)) {
     const lastTime = storeID.get(ctx.stanzaId);
     const diff = (ctx.timestamp - lastTime);
     console.lo
     if (diff < maxReplyTime) {
+      if (ctx.originalParticipant) isolatedJID.set(ctx.originalParticipant, Date.now());
       return true;
     } else {
       storeID.set(ctx.id, ctx.timestamp);
@@ -196,4 +207,23 @@ export function isBot(ctx) {
   }
 
   return false
+}
+
+
+/** 
+ * Shorten a string by replacing middle characters with ".."
+  * 
+ * @param {string} str - Input string
+ * @param {number} len - Desired total length
+ * @returns {string} Shortened string or empty string if input is falsy
+ * @example
+ * shortTo("abcdefghijk", 5) // returns "ab..k"
+ */
+export function Shorten(s, n) {
+  if (!s) return '';
+  if (s.length > n) {
+    return s.slice(0, Math.floor(n / 2)) + '..' + s.slice(-Math.floor(n / 2));
+  } else {
+    return s;
+  }
 }
