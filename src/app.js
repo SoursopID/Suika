@@ -46,7 +46,7 @@ if (existsSync(envPath)) {
 async function connectWith(sessionData) {
   if (sessionData?.startsWith('mongodb:')) {
     return useMongoState(sessionData);
-  } else if (sessionData?.endsWith(/(\.sqlite|\.db)/gi)) {
+  } else if (sessionData?.endsWith('.sqlite') || sessionData?.endsWith('.db')) {
     return useSqliteState(sessionData);
   } else {
     return await useMultiFileAuthState(sessionData);
