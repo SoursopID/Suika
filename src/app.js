@@ -16,6 +16,8 @@ import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import path from 'path';
 import readline from "node:readline";
+import { useMongoState } from "./mongodb.js";
+import { useSqliteState } from "./sqlite.js";
 
 const question = readline.createInterface({
   input: process.stdin,
@@ -37,13 +39,30 @@ if (existsSync(envPath)) {
 }
 
 /**
+ * 
+ * @param {string} sessionData 
+ * @returns {ImportAttributes('baileys').AuthenticationCreds, Promise<void>}
+ */
+async function connectWith(sessionData) {
+  if (sessionData?.startsWith('mongodb:')) {
+    return useMongoState(sessionData);
+  } else if (sessionData?.endsWith(/(\.sqlite|\.db)/gi)) {
+    return useSqliteState(sessionData);
+  } else {
+    return await useMultiFileAuthState(sessionData);
+  }
+}
+
+/**
  * @typedef {Object} ClientOptions
- * @property {string} [sessionDir='session'] - Directory to store session files
+ * @property {string} [sessionData='session'] - Directory to store session files
  * @property {string} [pluginDir='./plugins'] - Directory to load plugins from
  * @property {string} [dataDir='./data'] - Directory to store data files
  * @property {string} [method='otp'] - Authentication method to use, can be 'qr' or 'otp'
  * @property {string} [phone=''] - WhatsApp number to send messages to
  */
+
+
 
 /** 
  * Starts a WhatsApp client with the specified options
@@ -52,17 +71,17 @@ if (existsSync(envPath)) {
  * @returns {Promise<import('baileys').WASocket>} The connected WhatsApp socket
  */
 async function clientStart(options) {
-  const sessionDir = options?.sessionDir ?? 'session';
+  const sessionData = options?.sessionData ?? 'session';
   const pluginDir = options?.pluginDir ?? './plugins';
   const dataDir = options?.dataDir ?? './data';
   const method = options?.method ?? 'qr';
   let phone = options?.phone ?? '';
 
-  console.log(`sessionDir:`, sessionDir);
+  console.log(`sessionData:`, sessionData);
   console.log(`pluginDir:`, pluginDir);
   console.log(`dataDir:`, dataDir);
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+  const { state, saveCreds } = await connectWith(sessionData);
 
   const handler = new Handler(options);
 
@@ -126,7 +145,7 @@ async function clientStart(options) {
  */
 function getOptionsFromEnv() {
   return {
-    sessionDir: process.env.SUIKA_SESSION_DIR ?? './session',
+    sessionData: process.env.SUIKA_SESSION_DATA ?? './session',
     pluginDir: process.env.SUIKA_PLUGIN_DIR ?? './plugins',
     dataDir: process.env.SUIKA_DATA_DIR ?? './data',
     method: process.env.SUIKA_METHOD ?? 'otp',
