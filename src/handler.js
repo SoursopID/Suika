@@ -64,8 +64,11 @@ export class Handler {
     if (!options?.pluginDir || options?.pluginDir?.length === 0) throw new Error('Plugin directory path is required');
     if (!options?.dataDir || options?.dataDir?.length === 0) throw new Error('Data directory path is required');
 
-    const dataStat = statSync(options.dataDir);
-    if (!dataStat?.isDirectory()) mkdirSync(options.dataDir, { recursive: true });
+    try {
+      const dataStat = statSync(options.dataDir);
+    } catch (error) {
+       mkdirSync(options.dataDir, { recursive: true });
+    }
 
     this.pluginDir = path.resolve(options.pluginDir)
     this.prefix = options.prefix ?? DEFAULT_PREFIX;
